@@ -191,6 +191,35 @@
     return bank;
   }
 
+  const CAST = {
+    Narrator: { pitch: 0.86, rate: 0.9, prefer: "female", slot: 0 },
+    Mara: { pitch: 1.0, rate: 0.98, prefer: "female", slot: 1 },
+    June: { pitch: 1.28, rate: 1.06, prefer: "female", slot: 0 },
+    Harris: { pitch: 1.06, rate: 1.02, prefer: "male", slot: 0 },
+    Ellis: { pitch: 0.68, rate: 0.86, prefer: "male", slot: 1 },
+    Nedra: { pitch: 0.98, rate: 0.9, prefer: "female", slot: 1 },
+    Ian: { pitch: 0.84, rate: 0.74, prefer: "male", slot: 0 },
+    Cal: { pitch: 0.74, rate: 0.82, prefer: "male", slot: 1 },
+    Owen: { pitch: 0.62, rate: 0.86, prefer: "male", slot: 0 },
+    Ruth: { pitch: 1.16, rate: 0.76, prefer: "female", slot: 1 },
+    Pete: { pitch: 0.8, rate: 0.98, prefer: "male", slot: 1 },
+    Voss: { pitch: 0.54, rate: 0.78, prefer: "male", slot: 0 },
+  };
+
+  function pickVoice(cast) {
+    const synth = window.speechSynthesis;
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    if (!voices.length) return null;
+    const en = voices.filter((v) => /^en/i.test(v.lang));
+    const pool = en.length ? en : voices;
+    const female = /zira|heera|samantha|victoria|karen|moira|fiona|susan|linda|hazel|aria|jenny|sara|libby|female/i;
+    const male = /david|mark|ravi|guy|george|daniel|alex|fred|ryan|eric|male/i;
+    const matched = pool.filter((v) => (cast.prefer === "female" ? female : male).test(v.name));
+    const list = matched.length ? matched : pool;
+    return list[(cast.slot || 0) % list.length] || null;
+  }
+
   const AudioBus = {
     ctx: null,
     master: null,
@@ -200,6 +229,12 @@
     voiceBank: null,
     voiceBuilding: false,
     activeVoices: 0,
+    queue: [],
+    token: 0,
+    busy: false,
+    speaking: "",
+    speakTimer: 0,
+    lastError: "",
 
     ensure() {
       if (this.muted) return null;
@@ -234,7 +269,17 @@
         this.scheduleVoices();
       }
       if (this.ctx.state === "suspended") this.ctx.resume();
+      this.arm();
       return this.ctx;
+    },
+
+    arm() {
+      if (this.armed || this.muted || !window.speechSynthesis) return;
+      this.armed = true;
+      const u = new SpeechSynthesisUtterance(".");
+      u.volume = 0;
+      u.rate = 2;
+      window.speechSynthesis.speak(u);
     },
 
     scheduleVoices() {
@@ -251,6 +296,81 @@
     setMuted(m) {
       this.muted = m;
       if (this.master) this.master.gain.value = m ? 0 : 0.8;
+      if (m) this.stopSpeak();
+    },
+
+    stopSpeak() {
+      this.token += 1;
+      this.queue = [];
+      this.busy = false;
+      this.speaking = "";
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+    },
+
+    speak(text, who, opts) {
+      opts = opts || {};
+      const clean = String(text || "").replace(/\s+/g, " ").trim();
+      if (!clean || this.muted || !window.speechSynthesis) return;
+      this.lineText = clean;
+      const castName = CAST[who] ? who : (who ? "Mara" : "Narrator");
+      const interrupt = opts.replace !== false && (this.busy || this.queue.length);
+      if (opts.replace !== false) {
+        this.token += 1;
+        this.queue = [];
+        this.busy = false;
+      } else if (!this.token) this.token = 1;
+      const token = this.token;
+      this.queue.push({ text: clean, who: castName, token, done: false });
+      if (interrupt) {
+        window.speechSynthesis.cancel();
+        clearTimeout(this.speakTimer);
+        this.speakTimer = setTimeout(() => { if (token === this.token) this.pumpSpeak(); }, 40);
+      } else this.pumpSpeak();
+    },
+
+    speakSequence(lines, who) {
+      (lines || []).forEach((text, i) => this.speak(text, who, { replace: i === 0 }));
+    },
+
+    pumpSpeak() {
+      if (this.busy || !this.queue.length || this.muted || !window.speechSynthesis) return;
+      const item = this.queue[0];
+      if (item.token !== this.token) {
+        this.queue.shift();
+        this.pumpSpeak();
+        return;
+      }
+      const cast = CAST[item.who] || CAST.Narrator;
+      const u = new SpeechSynthesisUtterance(item.text);
+      u.pitch = cast.pitch;
+      u.rate = cast.rate;
+      u.volume = 1;
+      u.lang = "en-US";
+      const voice = pickVoice(cast);
+      if (voice) u.voice = voice;
+      this.busy = true;
+      this.speaking = item.who;
+      const finish = () => {
+        if (item.done || item.token !== this.token) return;
+        item.done = true;
+        this.busy = false;
+        if (this.queue[0] === item) this.queue.shift();
+        if (!this.queue.length) this.speaking = "";
+        this.pumpSpeak();
+      };
+      u.onend = finish;
+      u.onerror = (ev) => {
+        this.lastError = (ev && ev.error) || "error";
+        if (!item.retried && this.lastError !== "interrupted" && this.lastError !== "canceled") {
+          item.retried = true;
+          item.done = false;
+          this.busy = false;
+          setTimeout(() => { if (item.token === this.token) this.pumpSpeak(); }, 50);
+          return;
+        }
+        finish();
+      };
+      window.speechSynthesis.speak(u);
     },
 
     tension(amount) {
@@ -319,4 +439,8 @@
   };
 
   root.AudioBus = AudioBus;
+  if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", () => window.speechSynthesis.getVoices());
+  }
 })(window);
