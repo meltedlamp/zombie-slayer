@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zombie Slayer</title>
+  <link rel="stylesheet" href="css/game.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="c"></canvas>
+    <div id="grain"></div>
+    <div id="vignette"></div>
+
+    <section id="title">
+      <p class="eyebrow">Harrow Creek</p>
+      <h1>Zombie<br />Slayer</h1>
+      <p class="lede">Stylized 3D. Fog, moonlight, low-poly ground, and a katana. An original story in the tone of a long survival: every reply is kept.</p>
+      <p class="fine">Death and infection are part of the road. Mercy is a black screen, not a show. The dead are a pressure. The living are the choices.</p>
+      <label class="name-field">
+        <span>What do they call you</span>
+        <input id="name" maxlength="18" value="Mara" autocomplete="off" />
+      </label>
+      <div class="row">
+        <button class="btn" id="btn-new" type="button">Begin</button>
+        <button class="btn hidden" id="btn-continue" type="button">Continue</button>
+        <button class="btn ghost" id="btn-sound" type="button">Sound on</button>
+      </div>
+      <p class="fine" style="margin-top:22px">WASD move · arrows or mouse turn · click cuts · right mouse blocks · space dodges · E approaches · J journal · Esc pauses</p>
+    </section>
+
+    <div id="confirm" class="hidden">
+      <h2>Bury the saved story?</h2>
+      <p class="lede">Starting again keeps nothing from the last road.</p>
+      <div class="row">
+        <button class="btn" id="btn-yes" type="button">Start again</button>
+        <button class="btn ghost" id="btn-no" type="button">Go back</button>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div>
+        <div id="place"></div>
+      </div>
+      <div class="bars">
+        <div class="bar hp" id="bar-hp"><span>BODY</span><i><span id="fill-hp"></span></i></div>
+        <div class="bar" id="bar-st"><span>ARM</span><i><span id="fill-st"></span></i></div>
+        <div class="bar" id="bar-edge"><span>EDGE</span><i><span id="fill-edge"></span></i></div>
+      </div>
+    </div>
+    <div id="hint"></div>
+    <div id="prompt"></div>
+    <div id="tip"></div>
+    <div id="lookmsg" class="hidden">Click the world to look with the mouse<br />Arrow keys turn either way</div>
+
+    <div id="dialogue" class="hidden">
+      <div id="who"></div>
+      <p id="line"></p>
+      <div id="choices"></div>
+      <div class="continue-hint" id="cont">Click or space</div>
+    </div>
+
+    <div id="card" class="hidden">
+      <p id="card-kicker"></p>
+      <h2 id="card-title"></h2>
+    </div>
+
+    <div id="blackout" class="hidden">
+      <p id="black-text"></p>
+    </div>
+
+    <div id="pause" class="hidden">
+      <p class="eyebrow">Paused</p>
+      <h2>The road can wait</h2>
+      <div class="row">
+        <button class="btn" id="btn-resume" type="button">Resume</button>
+        <button class="btn" id="btn-journal" type="button">Journal</button>
+        <button class="btn ghost" id="btn-quit" type="button">Title</button>
+      </div>
+    </div>
+
+    <div id="dead" class="hidden">
+      <p class="eyebrow">Down</p>
+      <h2>The sword stays where it fell</h2>
+      <p class="lede">The story does not. You can stand back up in the same hour. The edge keeps the nick.</p>
+      <div class="row">
+        <button class="btn" id="btn-retry" type="button">Stand up</button>
+        <button class="btn ghost" id="btn-dead-title" type="button">Title</button>
+      </div>
+    </div>
+
+    <div id="journal" class="hidden">
+      <p class="eyebrow">What you carry</p>
+      <h2>Journal</h2>
+      <div id="rel"></div>
+      <ul id="log"></ul>
+      <button class="btn" id="btn-close-journal" type="button">Close</button>
+    </div>
+
+    <div id="end" class="hidden">
+      <p class="eyebrow" id="end-kicker">Harrow Creek</p>
+      <h1 id="end-title"></h1>
+      <div id="endps"></div>
+      <button class="btn" id="btn-end" type="button">Back to the dark</button>
+    </div>
+  </div>
+  <script src="vendor/three.min.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
