@@ -1355,6 +1355,10 @@
     try { localStorage.setItem(SAVE, JSON.stringify({ state, node: state.node })); } catch (e) { /* private mode */ }
   }
 
+  function clearSave() {
+    try { localStorage.removeItem(SAVE); } catch (e) { /* private mode */ }
+  }
+
   function hasSave() {
     try { return !!localStorage.getItem(SAVE); } catch (e) { return false; }
   }
@@ -1770,6 +1774,7 @@
   }
 
   function newGame(name) {
+    clearSave();
     state = Story.createState(name);
     player.hp = 100;
     player.stamina = 100;
@@ -1821,7 +1826,9 @@
     ui.hint.textContent = "";
     ui.prompt.textContent = "";
     ui.tip.textContent = "";
-    show(ui.btnContinue, hasSave());
+    const saved = hasSave();
+    show(ui.btnContinue, saved);
+    $("btn-new").textContent = saved ? "Start over" : "Begin";
   }
 
   function finishExplore() {
