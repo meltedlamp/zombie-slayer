@@ -70,6 +70,12 @@
       forms: [[620, 1500, 2700], [500, 1200, 1900]], bw: [140, 160, 200],
       twoSyl: 0, attack: 0.08, release: 0.3, shapes: ["arch"],
     },
+    scream: {
+      dur: [0.55, 0.95], f0: [190, 280], glide: [0.72, 0.9],
+      vib: [6.5, 10], vibDepth: [10, 22], breath: [0.38, 0.62], fry: 0.18,
+      forms: [[780, 1750, 2900], [640, 1500, 2400]], bw: [100, 130, 170],
+      twoSyl: 0.2, attack: 0.03, release: 0.38, shapes: ["fall", "arch"],
+    },
   };
 
   function renderVoice(sr, kind, seed) {
@@ -177,7 +183,7 @@
   function makeVoiceBank(ctx) {
     const sr = ctx.sampleRate;
     const bank = {};
-    const plan = { moan: 6, snarl: 4, brute: 3, hiss: 3 };
+    const plan = { moan: 6, snarl: 4, brute: 3, hiss: 3, scream: 2 };
     let seed = 11;
     Object.keys(plan).forEach((kind) => {
       bank[kind] = [];
@@ -249,13 +255,13 @@
         this.droneGain.gain.value = 0.0;
         const filter = this.ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.value = 220;
+        filter.frequency.value = 140;
         const a = this.ctx.createOscillator();
         const b = this.ctx.createOscillator();
         a.type = "sine";
         b.type = "triangle";
-        a.frequency.value = 55;
-        b.frequency.value = 82;
+        a.frequency.value = 38;
+        b.frequency.value = 57;
         a.connect(filter);
         b.connect(filter);
         filter.connect(this.droneGain);
@@ -374,9 +380,25 @@
     },
 
     tension(amount) {
-      if (!this.droneGain || this.muted) return;
-      const target = 0.012 + Math.max(0, Math.min(1, amount)) * 0.05;
-      this.droneGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.4);
+      if (!this.droneGain || this.muted || !this.ctx) return;
+      const target = 0.02 + Math.max(0, Math.min(1, amount)) * 0.09;
+      if (this._tensionTarget != null && Math.abs(this._tensionTarget - target) < 0.002) return;
+      this._tensionTarget = target;
+      const gain = this.droneGain.gain;
+      const now = this.ctx.currentTime;
+      gain.cancelScheduledValues(now);
+      gain.setTargetAtTime(target, now, 0.28);
+    },
+
+    heartbeat(amount) {
+      const n = Math.max(0, Math.min(1, amount || 0));
+      this.burst(42, 0.22, 0.1 + n * 0.16, "lowpass");
+      const ctx = this.ctx;
+      if (!ctx) return;
+      const wait = 0.11 + (1 - n) * 0.05;
+      setTimeout(() => {
+        if (!this.muted) this.burst(58, 0.12, 0.05 + n * 0.08, "lowpass");
+      }, wait * 1000);
     },
 
     burst(freq, dur, gain, type) {
@@ -407,7 +429,7 @@
     zombie(kind, pan, volume, muff) {
       const ctx = this.ensure();
       if (!ctx || !this.voiceBank) return false;
-      if (this.activeVoices >= 2) return false;
+      if (this.activeVoices >= 3) return false;
       const pool = this.voiceBank[kind] || this.voiceBank.moan;
       if (!pool || !pool.length) return false;
       const src = ctx.createBufferSource();

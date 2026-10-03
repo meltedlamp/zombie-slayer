@@ -1,9 +1,9 @@
 :root {
-  --paper: #e4d9c8;
-  --dim: #a89884;
-  --rust: #8d3b32;
-  --ink: #070605;
-  --panel: rgba(7, 6, 5, 0.78);
+  --paper: #e7d9c6;
+  --dim: #b39a86;
+  --rust: #a33a2e;
+  --ink: #040203;
+  --panel: rgba(4, 2, 3, 0.86);
 }
 
 * { box-sizing: border-box; }
@@ -23,30 +23,69 @@ button, input { font-family: inherit; color: inherit; }
 
 canvas { display: block; width: 100%; height: 100%; }
 
-#grain, #vignette, #letterbox {
+#grain, #vignette, #bleed, #letterbox {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
 #grain {
-  opacity: 0.14;
-  background-image: radial-gradient(#000 0.6px, transparent 0.6px);
-  background-size: 3px 3px;
-  mix-blend-mode: multiply;
+  opacity: 0.16;
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.55) 0.7px, transparent 0.75px),
+    radial-gradient(rgba(40, 0, 0, 0.28) 0.5px, transparent 0.6px);
+  background-size: 3px 3px, 5px 5px;
+  background-position: 0 0, 1px 2px;
+}
+
+@keyframes grainShift {
+  0% { background-position: 0 0, 1px 2px; }
+  100% { background-position: 2px 3px, -1px 0; }
 }
 
 #vignette {
-  background: radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, 0.62) 100%);
+  background: radial-gradient(ellipse at center, transparent 28%, rgba(0, 0, 0, 0.82) 100%);
   transition: background 0.25s linear;
 }
 
 #vignette.hurt {
-  background: radial-gradient(ellipse at center, transparent 28%, rgba(90, 16, 12, 0.5) 100%);
+  background: radial-gradient(ellipse at center, rgba(90, 0, 0, 0.28) 0%, rgba(70, 0, 0, 0.72) 100%);
 }
 
 #vignette.low {
-  box-shadow: inset 0 0 120px rgba(70, 10, 8, 0.45);
+  box-shadow: inset 0 0 140px rgba(90, 8, 8, 0.62);
+}
+
+#bleed {
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(80, 0, 0, 0.62) 100%),
+    radial-gradient(circle at 12% 88%, rgba(110, 8, 8, 0.45), transparent 26%),
+    radial-gradient(circle at 86% 14%, rgba(80, 0, 0, 0.38), transparent 22%);
+  transition: opacity 0.12s linear;
+}
+
+#bleed.on { opacity: 1; }
+
+#app.dread-close #vignette {
+  background: radial-gradient(ellipse at center, transparent 18%, rgba(48, 0, 0, 0.78) 100%);
+  animation: throb 0.76s ease-in-out infinite;
+}
+
+#app.dread-close #bleed { opacity: 0.55; }
+
+#app.dread-low #vignette { animation: throb 0.58s ease-in-out infinite; }
+
+#app.dread-critical #vignette {
+  animation: throb 0.38s ease-in-out infinite;
+  background: radial-gradient(ellipse at center, transparent 10%, rgba(110, 0, 0, 0.84) 100%);
+}
+
+#app.dread-critical #bleed { opacity: 0.8; }
+
+@keyframes throb {
+  0%, 100% { opacity: 0.62; }
+  42% { opacity: 1; }
 }
 
 .hidden { display: none !important; }
@@ -61,7 +100,7 @@ canvas { display: block; width: 100%; height: 100%; }
   flex-direction: column;
   justify-content: flex-end;
   padding: 7vh 9vw 8vh;
-  background: linear-gradient(to top, rgba(7, 6, 5, 0.88) 0%, rgba(7, 6, 5, 0.2) 46%, rgba(7, 6, 5, 0.15) 100%);
+  background: linear-gradient(to top, rgba(4, 1, 2, 0.94) 0%, rgba(4, 1, 2, 0.28) 38%, rgba(4, 1, 2, 0.05) 100%);
 }
 
 .eyebrow {

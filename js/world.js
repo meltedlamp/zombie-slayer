@@ -1,48 +1,160 @@
 (function (root) {
   const ARENAS = {
-    dojo: { layout: "dojo", fog: 0x1a1416, density: 0.032, hemiSky: 0x7a6a72, hemiGround: 0x2a211c, moon: 0xd2c4bc, moonI: 1.15, bounds: { x: 16, z: 16 } },
-    gas: { layout: "gas", fog: 0x141614, density: 0.036, hemiSky: 0x6e746c, hemiGround: 0x241e18, moon: 0xc5c8c0, moonI: 0.95, bounds: { x: 17, z: 17 } },
-    overpass: { layout: "overpass", fog: 0x121418, density: 0.036, hemiSky: 0x5a6270, hemiGround: 0x1c1a18, moon: 0xb0b8c4, moonI: 0.9, bounds: { x: 15, z: 16 } },
-    truck: { layout: "truck", fog: 0x1a1814, density: 0.03, hemiSky: 0x8a7a68, hemiGround: 0x2a241c, moon: 0xe0d4c4, moonI: 1.2, bounds: { x: 18, z: 18 } },
-    school: { layout: "school", fog: 0x181816, density: 0.034, hemiSky: 0x7a756c, hemiGround: 0x26221c, moon: 0xd5d0c6, moonI: 1.05, bounds: { x: 17, z: 17 } },
-    farm: { layout: "farm", fog: 0x1c1a16, density: 0.028, hemiSky: 0x8a7858, hemiGround: 0x2a2418, moon: 0xe6d2b0, moonI: 1.28, bounds: { x: 18, z: 18 } },
-    farmNight: { layout: "farm", fog: 0x0c1016, density: 0.046, hemiSky: 0x3a4458, hemiGround: 0x12100e, moon: 0xb7c4d8, moonI: 0.72, rain: true, bounds: { x: 18, z: 18 } },
-    roadblock: { layout: "roadblock", fog: 0x161410, density: 0.034, hemiSky: 0x6a6248, hemiGround: 0x221e16, moon: 0xd8d0b8, moonI: 1.1, bounds: { x: 15, z: 16 } },
-    bridge: { layout: "bridge", fog: 0x101418, density: 0.026, hemiSky: 0x4a5868, hemiGround: 0x141810, moon: 0xc5d0dc, moonI: 1, bounds: { x: 2.35, z: 20 }, camDist: 5.2 },
+    dojo: { layout: "dojo", fog: 0x10080c, density: 0.048, hemiSky: 0x4a4048, hemiGround: 0x1a1010, moon: 0x9aabb8, moonI: 0.85, bounds: { x: 16, z: 16 } },
+    gas: { layout: "gas", fog: 0x0c100e, density: 0.05, hemiSky: 0x3a4840, hemiGround: 0x141210, moon: 0x8e9a96, moonI: 0.72, bounds: { x: 17, z: 17 } },
+    overpass: { layout: "overpass", fog: 0x0a0e14, density: 0.052, hemiSky: 0x303848, hemiGround: 0x12100e, moon: 0x7a8a9a, moonI: 0.7, bounds: { x: 15, z: 16 } },
+    truck: { layout: "truck", fog: 0x14110c, density: 0.044, hemiSky: 0x524838, hemiGround: 0x1c1610, moon: 0xb4a890, moonI: 0.9, bounds: { x: 18, z: 18 } },
+    school: { layout: "school", fog: 0x121210, density: 0.048, hemiSky: 0x44423c, hemiGround: 0x181410, moon: 0xa09c90, moonI: 0.78, bounds: { x: 17, z: 17 } },
+    farm: { layout: "farm", fog: 0x16140e, density: 0.04, hemiSky: 0x524832, hemiGround: 0x1c1610, moon: 0xc4b088, moonI: 0.95, bounds: { x: 18, z: 18 } },
+    farmNight: { layout: "farm", fog: 0x080c14, density: 0.062, hemiSky: 0x243040, hemiGround: 0x100e0c, moon: 0x7a8aa0, moonI: 0.55, rain: true, bounds: { x: 18, z: 18 } },
+    roadblock: { layout: "roadblock", fog: 0x12100a, density: 0.05, hemiSky: 0x403820, hemiGround: 0x18140e, moon: 0xa09878, moonI: 0.74, bounds: { x: 15, z: 16 } },
+    bridge: { layout: "bridge", fog: 0x0a1014, density: 0.04, hemiSky: 0x283038, hemiGround: 0x101410, moon: 0x8a98a6, moonI: 0.72, bounds: { x: 2.35, z: 20 }, camDist: 5.2 },
   };
 
   const TINT = {
-    dojo: 0xc8b8a4,
-    gas: 0xb7b2a8,
-    overpass: 0x9aa0a8,
-    truck: 0xb7a88a,
-    school: 0xb4aea4,
-    farm: 0xa8a080,
-    farmNight: 0x6a6858,
-    roadblock: 0xa89a78,
-    bridge: 0x8a9088,
+    dojo: 0x6a5848,
+    gas: 0x5c5850,
+    overpass: 0x4e545c,
+    truck: 0x6a5c48,
+    school: 0x5e5a52,
+    farm: 0x5a5640,
+    farmNight: 0x3a3830,
+    roadblock: 0x5a523c,
+    bridge: 0x464a44,
   };
 
   let groundTex = null;
 
   function mudTexture() {
     if (groundTex) return groundTex;
+    const size = 1024;
     const c = document.createElement("canvas");
-    c.width = 512;
-    c.height = 512;
+    c.width = size;
+    c.height = size;
     const g = c.getContext("2d");
-    g.fillStyle = "#3a342c";
-    g.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 7000; i++) {
+    g.fillStyle = "#2a241e";
+    g.fillRect(0, 0, size, size);
+    for (let i = 0; i < 28000; i++) {
       const v = Math.random();
-      g.fillStyle = v > 0.55 ? "rgba(0,0,0,0.2)" : "rgba(110,90,60,0.16)";
-      g.fillRect(Math.random() * 512, Math.random() * 512, v > 0.85 ? 6 : 2, 2);
+      g.fillStyle = v > 0.62 ? "rgba(0,0,0,0.28)" : "rgba(90,70,48,0.2)";
+      const s = v > 0.92 ? 8 : v > 0.7 ? 3 : 1;
+      g.fillRect(Math.random() * size, Math.random() * size, s, s + (v > 0.8 ? 2 : 0));
+    }
+    for (let i = 0; i < 18; i++) {
+      g.strokeStyle = "rgba(12,10,8,0.45)";
+      g.lineWidth = 1 + Math.random() * 2;
+      g.beginPath();
+      let x = Math.random() * size;
+      let y = Math.random() * size;
+      g.moveTo(x, y);
+      for (let k = 0; k < 6; k++) {
+        x += (Math.random() - 0.5) * 180;
+        y += (Math.random() - 0.5) * 80;
+        g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    for (let i = 0; i < 14; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const rad = 18 + Math.random() * 70;
+      const stain = g.createRadialGradient(x, y, 2, x, y, rad);
+      stain.addColorStop(0, "rgba(70,8,8,0.72)");
+      stain.addColorStop(0.45, "rgba(40,6,6,0.38)");
+      stain.addColorStop(1, "rgba(20,4,4,0)");
+      g.fillStyle = stain;
+      g.beginPath();
+      g.ellipse(x, y, rad, rad * (0.45 + Math.random() * 0.4), Math.random() * 3, 0, Math.PI * 2);
+      g.fill();
     }
     groundTex = new THREE.CanvasTexture(c);
     groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
-    groundTex.repeat.set(12, 12);
+    groundTex.repeat.set(7, 7);
+    if (THREE.SRGBColorSpace) groundTex.colorSpace = THREE.SRGBColorSpace;
+    groundTex.anisotropy = 4;
     groundTex.userData.shared = true;
     return groundTex;
+  }
+
+  function concatGeometries(geos) {
+    let count = 0;
+    for (let i = 0; i < geos.length; i++) count += geos[i].attributes.position.count;
+    const positions = new Float32Array(count * 3);
+    const normals = new Float32Array(count * 3);
+    let offset = 0;
+    for (let g = 0; g < geos.length; g++) {
+      const pos = geos[g].attributes.position;
+      const nrm = geos[g].attributes.normal;
+      const n = pos.count;
+      positions.set(pos.array.subarray(0, n * 3), offset * 3);
+      if (nrm) normals.set(nrm.array.subarray(0, n * 3), offset * 3);
+      offset += n;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+    return geo;
+  }
+
+  function pruneEmpty(root) {
+    const groups = [];
+    root.traverse((obj) => {
+      if (obj !== root && obj.isGroup) groups.push(obj);
+    });
+    for (let i = groups.length - 1; i >= 0; i--) {
+      const g = groups[i];
+      if (g.parent && g.children.length === 0) g.parent.remove(g);
+    }
+  }
+
+  function bakeStatic(root) {
+    root.updateMatrixWorld(true);
+    const buckets = new Map();
+    const drop = [];
+    const meshes = [];
+    root.traverse((obj) => { if (obj.isMesh) meshes.push(obj); });
+    meshes.forEach((mesh) => {
+      const material = mesh.material;
+      const canMerge = material && !Array.isArray(material) && !material.map && !mesh.userData.skipBake;
+      if (!canMerge) {
+        if (material && material.map) mesh.castShadow = false;
+        return;
+      }
+      let bucket = buckets.get(material);
+      if (!bucket) {
+        bucket = { material, meshes: [] };
+        buckets.set(material, bucket);
+      }
+      bucket.meshes.push(mesh);
+      drop.push(mesh);
+    });
+    const temps = [];
+    buckets.forEach((bucket) => {
+      const geos = bucket.meshes.map((mesh) => {
+        const src = mesh.geometry;
+        const geo = src.index ? src.toNonIndexed() : src.clone();
+        geo.applyMatrix4(mesh.matrixWorld);
+        temps.push(geo);
+        return geo;
+      });
+      const merged = new THREE.Mesh(concatGeometries(geos), bucket.material);
+      const transparent = !!bucket.material.transparent;
+      const decal = !!(bucket.material.userData && bucket.material.userData.decal);
+      merged.castShadow = !transparent && !decal;
+      merged.receiveShadow = true;
+      merged.renderOrder = transparent ? 2 : decal ? 1 : 0;
+      merged.matrixAutoUpdate = false;
+      bucket.out = merged;
+    });
+    const doomed = new Set();
+    drop.forEach((mesh) => {
+      if (mesh.geometry) doomed.add(mesh.geometry);
+      if (mesh.parent) mesh.parent.remove(mesh);
+    });
+    doomed.forEach((geo) => geo.dispose());
+    temps.forEach((geo) => geo.dispose());
+    pruneEmpty(root);
+    buckets.forEach((bucket) => root.add(bucket.out));
   }
 
   function build(group, arenaId) {
@@ -52,6 +164,7 @@
     const markers = {};
     let points = [];
     let people = [];
+    const flickers = [];
     let start = { x: 0, z: 8, yaw: 0 };
 
     function add(mesh, solidBox) {
@@ -76,32 +189,64 @@
       return g;
     }
 
-    function mat(color, rough, metal) {
-      return new THREE.MeshStandardMaterial({
-        color,
-        roughness: rough == null ? 0.92 : rough,
-        metalness: metal || 0,
-      });
+    const matCache = new Map();
+
+    function mat(color) {
+      const key = "s|" + (color >>> 0);
+      let material = matCache.get(key);
+      if (!material) {
+        material = new THREE.MeshLambertMaterial({ color });
+        matCache.set(key, material);
+      }
+      return material;
+    }
+
+    function decalMat(color) {
+      const key = "d|" + (color >>> 0);
+      let material = matCache.get(key);
+      if (!material) {
+        material = new THREE.MeshLambertMaterial({
+          color,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+        });
+        material.userData.decal = true;
+        matCache.set(key, material);
+      }
+      return material;
     }
 
     function glassMat(opacity) {
-      return new THREE.MeshStandardMaterial({
-        color: 0xb7c6cc,
-        roughness: 0.12,
-        metalness: 0.15,
-        transparent: true,
-        opacity: opacity == null ? 0.38 : opacity,
-        side: THREE.DoubleSide,
-      });
+      const o = opacity == null ? 0.38 : opacity;
+      const key = "g|" + o;
+      let material = matCache.get(key);
+      if (!material) {
+        material = new THREE.MeshLambertMaterial({
+          color: 0xb7c6cc,
+          transparent: true,
+          opacity: o,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+        matCache.set(key, material);
+      }
+      return material;
     }
 
     function glowMat(color, intensity) {
-      return new THREE.MeshStandardMaterial({
-        color,
-        emissive: color,
-        emissiveIntensity: intensity == null ? 0.7 : intensity,
-        roughness: 0.55,
-      });
+      const glow = intensity == null ? 0.7 : intensity;
+      const key = "e|" + (color >>> 0) + "|" + glow;
+      let material = matCache.get(key);
+      if (!material) {
+        material = new THREE.MeshLambertMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: glow,
+        });
+        matCache.set(key, material);
+      }
+      return material;
     }
 
     function box(x, y, z, w, h, d, color, solid, rough) {
@@ -121,22 +266,14 @@
     }
 
     function patch(x, z, w, d, color, y) {
-      const material = new THREE.MeshStandardMaterial({
-        color,
-        roughness: 1,
-        metalness: 0,
-        polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2,
-      });
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), material);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), decalMat(color));
       m.rotation.x = -Math.PI / 2;
       m.position.set(x, y == null ? 0.025 : y, z);
       return flat(m);
     }
 
     function stain(x, z, r, color) {
-      const m = new THREE.Mesh(new THREE.CircleGeometry(r, 12), mat(color, 1));
+      const m = new THREE.Mesh(new THREE.CircleGeometry(r, 10), decalMat(color));
       m.rotation.x = -Math.PI / 2;
       m.position.set(x, 0.03, z);
       return flat(m);
@@ -145,16 +282,19 @@
     function practical(x, y, z, color, intensity, dist) {
       const light = new THREE.PointLight(color, intensity, dist || 9, 2);
       light.position.set(x, y, z);
+      light.userData.rest = intensity;
+      light.userData.phase = Math.random() * Math.PI * 2;
+      flickers.push(light);
       group.add(light);
       return light;
     }
 
     function tree(x, z, s) {
       s = s || 1;
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * s, 0.18 * s, 1.4 * s, 6), mat(0x2a241e));
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * s, 0.18 * s, 1.4 * s, 10), mat(0x2a241e));
       trunk.position.set(x, 0.7 * s, z);
       add(trunk);
-      const crown = new THREE.Mesh(new THREE.ConeGeometry(0.9 * s, 2.4 * s, 6), mat(0x2e3328));
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(0.9 * s, 2.4 * s, 10), mat(0x2e3328));
       crown.position.set(x, 2.1 * s, z);
       add(crown);
     }
@@ -305,7 +445,7 @@
       const tex = new THREE.CanvasTexture(c);
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(w || 2.4, h || 1.2),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
       );
       m.position.set(x, y, z);
       m.rotation.y = rot || 0;
@@ -328,7 +468,7 @@
       const tex = new THREE.CanvasTexture(c);
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(w || 0.8, (w || 0.8) * 0.5),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
       );
       m.position.set(x, y, z);
       m.rotation.y = rot || 0;
@@ -879,10 +1019,13 @@
         markers.span = { x: 0, z: -2, label: "the span" };
         const water = new THREE.Mesh(
           new THREE.PlaneGeometry(90, 90),
-          new THREE.MeshStandardMaterial({ color: 0x1a2830, roughness: 0.25, metalness: 0.2 })
+          new THREE.MeshLambertMaterial({ color: 0x1a2830 })
         );
         water.rotation.x = -Math.PI / 2;
         water.position.y = -1.35;
+        water.castShadow = false;
+        water.receiveShadow = true;
+        water.userData.skipBake = true;
         water.receiveShadow = true;
         group.add(water);
         patch(0, 0, 4.6, 40, 0x3a3c40, 0.12);
@@ -931,14 +1074,17 @@
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(120, 120),
-      new THREE.MeshStandardMaterial({ map: mudTexture(), color: TINT[arenaId] || 0xffffff, roughness: 1, metalness: 0 })
+      new THREE.MeshLambertMaterial({ map: mudTexture(), color: TINT[arenaId] || 0xffffff })
     );
     ground.rotation.x = -Math.PI / 2;
+    ground.castShadow = false;
     ground.receiveShadow = true;
+    ground.userData.skipBake = true;
     group.add(ground);
 
     (layouts[arena.layout] || layouts.dojo)();
-    return { arena, solids, markers, points, people, start };
+    bakeStatic(group);
+    return { arena, solids, markers, points, people, start, flickers };
   }
 
   root.World = { ARENAS, build };

@@ -42,9 +42,14 @@
   let lines = [], lineIndex = 0, visibleChoices = [], choicesUp = false, fullLine = "", shownChars = 0, speakerNow = "";
   let voiceHold = false;
   let rain = null;
+  let ash = null;
   let markerMesh = null;
   let exploreDone = false;
   let simReady = false;
+  let flickerLights = [];
+  let fogBase = 0x10080c;
+  let heart = 1.2;
+  let rim = null;
 
   const $ = (id) => document.getElementById(id);
   const ui = {};
@@ -53,9 +58,9 @@
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   function flatVectors() {
-    const f = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-    const r = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-    return { f, r };
+    axisF.set(-Math.sin(yaw), 0, -Math.cos(yaw));
+    axisR.set(Math.cos(yaw), 0, -Math.sin(yaw));
+    return { f: axisF, r: axisR };
   }
 
   function disposeObj(o) {
@@ -64,7 +69,8 @@
       if (!c.material) return;
       const ms = Array.isArray(c.material) ? c.material : [c.material];
       ms.forEach((m) => {
-        if (m.map && !m.map.userData.shared) m.map.dispose();
+        if (m.userData && m.userData.shared) return;
+        if (m.map && !(m.map.userData && m.map.userData.shared)) m.map.dispose();
         m.dispose();
       });
     });
@@ -78,23 +84,52 @@
     }
   }
 
-  function matStd(color, rough, metal) {
-    return new THREE.MeshStandardMaterial({ color, roughness: rough == null ? 0.9 : rough, metalness: metal || 0 });
+  const shadowProxyGeo = new THREE.CapsuleGeometry(0.34, 0.82, 2, 5);
+  shadowProxyGeo.userData.keep = true;
+  const shadowProxyMat = new THREE.MeshBasicMaterial();
+  shadowProxyMat.colorWrite = false;
+  shadowProxyMat.depthWrite = false;
+  shadowProxyMat.userData.shared = true;
+  const fleshCache = new Map();
+  const axisF = new THREE.Vector3();
+  const axisR = new THREE.Vector3();
+  const camDesired = new THREE.Vector3();
+  const camLook = new THREE.Vector3();
+  const camTalk = new THREE.Vector3();
+  const fearColor = new THREE.Color();
+  const fearHot = new THREE.Color(0x3a0808);
+  let labelsShown = null;
+
+  function matStd(color) {
+    return new THREE.MeshLambertMaterial({ color });
+  }
+
+  function attachShadow(g) {
+    const proxy = new THREE.Mesh(shadowProxyGeo, shadowProxyMat);
+    proxy.position.y = 0.95;
+    proxy.castShadow = true;
+    proxy.receiveShadow = false;
+    g.add(proxy);
+    g.traverse((c) => {
+      if (!c.isMesh || c === proxy) return;
+      c.castShadow = false;
+      c.receiveShadow = false;
+    });
   }
 
   function makeLabel(text) {
     const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 64;
+    c.width = 512;
+    c.height = 128;
     const g = c.getContext("2d");
-    g.clearRect(0, 0, 256, 64);
-    g.fillStyle = "rgba(0,0,0,0.45)";
-    g.fillRect(28, 14, 200, 36);
-    g.font = "24px Georgia";
+    g.clearRect(0, 0, 512, 128);
+    g.fillStyle = "rgba(0,0,0,0.55)";
+    g.fillRect(56, 28, 400, 72);
+    g.font = "48px Georgia";
     g.fillStyle = "#e6dccb";
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.fillText(text, 128, 34);
+    g.fillText(text, 256, 68);
     const tex = new THREE.CanvasTexture(c);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
     s.scale.set(1.15, 0.28, 1);
@@ -130,15 +165,15 @@
       bevelEnabled: true,
       bevelThickness: 0.006,
       bevelSize: 0.005,
-      bevelSegments: 1,
-      curveSegments: 2,
+      bevelSegments: 2,
+      curveSegments: 8,
     });
     geo.translate(0, 0, -0.01);
     return geo;
   }
 
   function makeSword(pivot) {
-    const steel = new THREE.MeshStandardMaterial({ color: 0xd5dde4, roughness: 0.2, metalness: 0.9, emissive: 0x3a4248, emissiveIntensity: 0.45 });
+    const steel = new THREE.MeshPhongMaterial({ color: 0xd5dde4, shininess: 46, specular: 0x9aa3aa, emissive: 0x3a4248, emissiveIntensity: 0.35 });
     const darkSteel = matStd(0x2c3136, 0.4, 0.7);
     const wrap = matStd(0x2a1a12, 0.94, 0);
     const cord = matStd(0x14110f, 0.8, 0.15);
@@ -169,55 +204,58 @@
   }
 
   function fleshMaterial(hex, seed, kind) {
+    const key = kind + ":" + (hex >>> 0) + ":" + ((seed || 1) % 3);
+    const cached = fleshCache.get(key);
+    if (cached) return cached;
     const rnd = hashRand(seed);
+    const size = 256;
     const c = document.createElement("canvas");
-    c.width = 128;
-    c.height = 128;
+    c.width = size;
+    c.height = size;
     const g = c.getContext("2d");
     const base = new THREE.Color(hex);
-    base.offsetHSL(((seed % 7) - 3) * 0.008, 0, ((seed % 5) - 2) * 0.02);
+    base.offsetHSL(((seed % 7) - 3) * 0.012, -0.04, ((seed % 5) - 2) * 0.03 - 0.06);
     g.fillStyle = "#" + base.getHexString();
-    g.fillRect(0, 0, 128, 128);
+    g.fillRect(0, 0, size, size);
     for (let i = 0; i < 70; i++) {
-      g.fillStyle = rnd() < 0.5
-        ? "rgba(28, 36, 24, " + (0.18 + rnd() * 0.35) + ")"
-        : "rgba(110, 84, 70, " + (0.1 + rnd() * 0.18) + ")";
+      g.fillStyle = rnd() < 0.55
+        ? "rgba(18, 24, 14, " + (0.2 + rnd() * 0.4) + ")"
+        : "rgba(92, 64, 52, " + (0.12 + rnd() * 0.22) + ")";
       g.beginPath();
-      g.ellipse(rnd() * 128, rnd() * 128, 3 + rnd() * 16, 2 + rnd() * 10, rnd() * 6, 0, Math.PI * 2);
+      g.ellipse(rnd() * size, rnd() * size, 4 + rnd() * 22, 3 + rnd() * 14, rnd() * 6, 0, Math.PI * 2);
       g.fill();
     }
-    for (let i = 0; i < 10; i++) {
-      g.fillStyle = "rgba(70, 36, 58, " + (0.2 + rnd() * 0.25) + ")";
-      g.beginPath();
-      g.ellipse(rnd() * 128, rnd() * 128, 5 + rnd() * 12, 3 + rnd() * 8, rnd() * 3, 0, Math.PI * 2);
-      g.fill();
-    }
-    const sores = kind === "runner" ? 5 : kind === "brute" ? 12 : 8;
+    const sores = kind === "runner" ? 8 : kind === "brute" ? 14 : 10;
     for (let i = 0; i < sores; i++) {
-      const x = rnd() * 128;
-      const y = rnd() * 128;
-      g.fillStyle = "rgba(90, 18, 14, 0.62)";
+      const x = rnd() * size;
+      const y = rnd() * size;
+      const rad = 3 + rnd() * 10;
+      const wound = g.createRadialGradient(x, y, 1, x, y, rad);
+      wound.addColorStop(0, "rgba(28, 4, 4, 0.9)");
+      wound.addColorStop(0.45, "rgba(110, 16, 12, 0.75)");
+      wound.addColorStop(1, "rgba(70, 18, 14, 0)");
+      g.fillStyle = wound;
       g.beginPath();
-      g.arc(x, y, 1.5 + rnd() * 4.5, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = "rgba(28, 6, 6, 0.8)";
-      g.beginPath();
-      g.arc(x + 1, y, 0.8 + rnd(), 0, Math.PI * 2);
+      g.arc(x, y, rad, 0, Math.PI * 2);
       g.fill();
     }
-    g.strokeStyle = "rgba(42, 52, 36, 0.4)";
-    g.lineWidth = 1;
-    for (let i = 0; i < 7; i++) {
+    g.strokeStyle = "rgba(22, 28, 16, 0.55)";
+    g.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) {
       g.beginPath();
-      g.moveTo(rnd() * 128, rnd() * 128);
-      g.bezierCurveTo(rnd() * 128, rnd() * 128, rnd() * 128, rnd() * 128, rnd() * 128, rnd() * 128);
+      g.moveTo(rnd() * size, rnd() * size);
+      g.bezierCurveTo(rnd() * size, rnd() * size, rnd() * size, rnd() * size, rnd() * size, rnd() * size);
       g.stroke();
     }
     const map = new THREE.CanvasTexture(c);
     if (THREE.SRGBColorSpace) map.colorSpace = THREE.SRGBColorSpace;
-    map.wrapS = THREE.RepeatWrapping;
-    map.wrapT = THREE.RepeatWrapping;
-    return new THREE.MeshStandardMaterial({ map, color: 0xffffff, roughness: 0.9, metalness: 0.02 });
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.anisotropy = 4;
+    map.userData.shared = true;
+    const skinMat = new THREE.MeshLambertMaterial({ map, color: 0xffffff });
+    skinMat.userData.shared = true;
+    fleshCache.set(key, skinMat);
+    return skinMat;
   }
 
   function makeFigure(opts) {
@@ -238,7 +276,7 @@
     const leather = matStd(leatherCol.getHex(), 0.84, 0.04);
     const hairMat = matStd(opts.hair || (zombie ? 0x12100e : 0x1a1614), 1);
     const metal = matStd(0x3e444a, 0.35, 0.62);
-    const gore = new THREE.MeshStandardMaterial({ color: 0x5a1614, emissive: 0x2a0808, emissiveIntensity: 0.45, roughness: 0.62 });
+    const gore = new THREE.MeshLambertMaterial({ color: 0x5a1614, emissive: 0x2a0808, emissiveIntensity: 0.45 });
     const bone = matStd(0xc8c0b0, 0.7, 0.05);
     const armR = bulky ? 0.105 : lanky ? 0.062 : 0.078;
     const legR = bulky ? 0.135 : lanky ? 0.078 : 0.108;
@@ -250,6 +288,7 @@
     const shoulders = [];
     const elbows = [];
     const hands = [];
+    const pupils = [];
     const headPivot = new THREE.Group();
     headPivot.position.set(0, 1.58, -0.02);
     inner.add(headPivot);
@@ -266,7 +305,7 @@
     addPart(inner, new THREE.BoxGeometry(0.15, 0.52, 0.045), cloth, 0.1, 0.68, 0.13, 0.12);
 
     function limbDown(parent, radius, length, material) {
-      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 4, 6), material);
+      const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 3, 6), material);
       mesh.position.y = -(length / 2 + radius);
       mesh.castShadow = true;
       parent.add(mesh);
@@ -334,8 +373,10 @@
     brow.rotation.x = zombie ? 0.22 : 0.55;
 
     if (zombie) {
-      const blood = new THREE.MeshStandardMaterial({ color: 0x4a1210, emissive: 0x140404, emissiveIntensity: 0.22, roughness: 0.4, metalness: 0.06 });
-      const milk = new THREE.MeshStandardMaterial({ color: kind === "runner" ? 0x8a3a32 : 0xc8c2a8, roughness: 0.22, metalness: 0.04, emissive: kind === "runner" ? 0x3a100c : 0x2a2014, emissiveIntensity: 0.12 });
+      const blood = new THREE.MeshLambertMaterial({ color: 0x6a1010, emissive: 0x3a0404, emissiveIntensity: 0.55 });
+      const eyeHex = kind === "runner" ? 0xff2414 : kind === "brute" ? 0xd25a18 : 0xd6e06a;
+      const emitHex = kind === "runner" ? 0xff1208 : kind === "brute" ? 0xa02808 : 0x9aaa30;
+      const milk = new THREE.MeshLambertMaterial({ color: eyeHex, emissive: emitHex, emissiveIntensity: 0.9 });
       eyeMat = milk;
       const pupil = matStd(0x070606, 0.35);
       const socket = matStd(0x0a0808, 1);
@@ -367,9 +408,10 @@
           addHead(new THREE.SphereGeometry(0.012, 5, 4), blood, side * 0.052, y, -0.12);
           return;
         }
-        const eye = addHead(new THREE.SphereGeometry(0.026, 8, 6), milk, side * 0.05, y, -0.12);
+        const eye = addHead(new THREE.SphereGeometry(0.028, 8, 6), milk, side * 0.05, y, -0.12);
         eye.scale.set(1, 0.62, 0.55);
-        addHead(new THREE.SphereGeometry(0.009, 5, 4), pupil, side * 0.05, y, -0.142);
+        const pupilMesh = addHead(new THREE.SphereGeometry(0.01, 8, 6), pupil, side * 0.05, y, -0.148);
+        pupils.push(pupilMesh);
       });
       addPart(inner, new THREE.BoxGeometry(0.14, 0.18, 0.03), blood, 0.02, 1.18, -0.2);
       for (let i = 0; i < (kind === "brute" ? 3 : 4); i++) {
@@ -515,6 +557,7 @@
       head: headPivot,
       jaw: g.userData.jaw || null,
       eyeMat,
+      pupils,
       hips,
       knees,
       shoulders,
@@ -545,6 +588,7 @@
       lastZ: null,
     };
     if (opts.scale) g.scale.setScalar(opts.scale);
+    attachShadow(g);
     return g;
   }
 
@@ -560,6 +604,7 @@
     const R = rig.rest;
     const e = t * t;
     const buckle = Math.sin(Math.min(1, t * 1.35) * Math.PI * 0.5);
+    rig.inner.scale.set(1, 1, 1);
     rig.inner.rotation.x = R.innerX + 0.22 * e;
     rig.inner.rotation.y = R.innerY;
     rig.inner.rotation.z = R.innerZ * (1 - t);
@@ -574,7 +619,7 @@
     }
     if (rig.jaw) rig.jaw.rotation.x = (rig.jaw.userData.rest || 0.4) + 0.42 * e;
     if (rig.sword) rig.sword.rotation.set(0.5 * e, 0.1 * e, 0.8 * e);
-    if (rig.eyeMat) rig.eyeMat.emissiveIntensity = 0.12 * (1 - e);
+    if (rig.eyeMat) rig.eyeMat.emissiveIntensity = 0.9 * (1 - e);
   }
 
   function applyCut(rig, o) {
@@ -674,6 +719,7 @@
     const s = Math.sin(anim.phase);
     const breathe = Math.sin(time * 1.65 + anim.phase * 0.15);
     const shift = Math.sin(time * 0.65 + anim.phase) * (1 - a);
+    rig.inner.scale.set(1, 1 + breathe * 0.012, 1);
     rig.inner.rotation.x = R.innerX + breathe * 0.018;
     rig.inner.rotation.y = R.innerY + s * 0.07 * a;
     rig.inner.rotation.z = R.innerZ + s * 0.045 * a + shift * 0.035;
@@ -721,14 +767,20 @@
       anim.twitch = (Math.random() < 0.72 ? 1 : 0.35) * (Math.random() < 0.5 ? -1 : 1) * (brute ? 0.1 : 0.26);
     } else anim.twitch *= Math.exp(-(o.dt || 0) * (runner ? 16 : 8));
     const twitch = anim.twitch;
-    const breathe = Math.sin(time * (runner ? 2.6 : 1.05) + phase);
+    const breathe = Math.sin(time * (runner ? 3.4 : brute ? 0.85 : 1.35) + phase);
     const s = Math.sin(phase);
-    rig.inner.rotation.x = R.innerX + (runner ? 0.06 : 0.03) + Math.sin(phase * 2) * 0.045 * a + breathe * 0.012;
-    rig.inner.rotation.y = Math.sin(phase * 0.45) * 0.07 * a + twitch * 0.15;
-    rig.inner.rotation.z = R.innerZ + s * (brute ? 0.09 : 0.13) * (0.4 + a) + twitch * 0.45;
-    rig.head.rotation.x = 0.16 + Math.sin(phase * 0.65) * 0.07 + (runner ? Math.sin(time * 8.5) * 0.035 : 0);
-    rig.head.rotation.y = Math.sin(time * 0.55 + phase) * 0.14 + twitch * 0.65;
-    rig.head.rotation.z = Math.sin(phase * 0.75) * 0.16 + twitch;
+    rig.inner.scale.set(1 + breathe * 0.01, 1 + breathe * 0.02, 1);
+    rig.inner.rotation.x = R.innerX + (runner ? 0.08 : 0.05) + Math.sin(phase * 2) * 0.06 * a + breathe * 0.02;
+    rig.inner.rotation.y = Math.sin(phase * 0.45) * 0.09 * a + twitch * 0.2;
+    rig.inner.rotation.z = R.innerZ + s * (brute ? 0.12 : 0.16) * (0.4 + a) + twitch * 0.55;
+    if (anim.snap == null) anim.snap = 0;
+    if ((o.dt || 0) > 0 && Math.random() < (o.dt || 0) * (runner ? 2.6 : brute ? 0.4 : 1.15)) {
+      anim.snap = (Math.random() < 0.5 ? -1 : 1) * (0.28 + Math.random() * 0.5);
+    }
+    anim.snap *= Math.exp(-(o.dt || 0) * 5.2);
+    rig.head.rotation.x = 0.22 + Math.sin(phase * 0.65) * 0.09 + (runner ? Math.sin(time * 9.5) * 0.05 : Math.sin(time * 2.2) * 0.03);
+    rig.head.rotation.y = Math.sin(time * 0.55 + phase) * 0.18 + twitch * 0.8 + anim.snap;
+    rig.head.rotation.z = Math.sin(phase * 0.75) * 0.2 + twitch * 1.15 + anim.snap * 0.4;
     const hipAmp = (brute ? 0.34 : runner ? 0.7 : 0.52) * a;
     const kneeAmp = (brute ? 0.42 : runner ? 0.95 : 0.68) * a;
     for (let i = 0; i < 2; i++) {
@@ -747,7 +799,7 @@
       rig.shoulders[i].rotation.y = Math.sin(phase * 1.25 + i * 1.8) * (runner ? 0.22 : 0.14);
       rig.shoulders[i].rotation.z = R.shZ[i] + Math.sin(phase + i * 1.4) * 0.08 + (i === 0 ? -1 : 1) * twitch * 0.25;
       rig.elbows[i].rotation.x = R.elX[i] + 0.1 + Math.abs(claw) * (runner ? 0.42 : 0.26);
-      if (rig.hands[i]) rig.hands[i].rotation.x = -0.42 - Math.max(0, claw) * (runner ? 0.55 : 0.35);
+      if (rig.hands[i]) rig.hands[i].rotation.x = -0.55 - Math.max(0, claw) * (runner ? 0.7 : 0.5) - Math.abs(twitch) * 0.4;
     }
     const strike = o.strike || 0;
     if (strike > 0) {
@@ -781,9 +833,17 @@
     }
     if ((o.gulp || 0) > 0.2 && strike <= 0) rig.head.rotation.x += 0.1 * o.gulp;
     if (rig.eyeMat) {
-      const pulse = 0.1 + Math.sin(time * (runner ? 7 : brute ? 2.2 : 3.4) + phase) * 0.04;
-      rig.eyeMat.emissiveIntensity = pulse + strike * 0.2;
+      const pulse = 0.55 + Math.sin(time * (runner ? 9 : brute ? 2.4 : 4.2) + phase) * 0.4;
+      rig.eyeMat.emissiveIntensity = pulse + strike * 0.9 + Math.abs(anim.snap || 0);
     }
+    (rig.pupils || []).forEach((p) => {
+      if (p.userData.restX == null) {
+        p.userData.restX = p.position.x;
+        p.userData.restY = p.position.y;
+      }
+      p.position.x = p.userData.restX + Math.sin(time * 2.4 + phase) * 0.007 + (anim.snap || 0) * 0.01;
+      p.position.y = p.userData.restY + Math.cos(time * 1.7) * 0.004;
+    });
     poseJaw(rig, o.gulp || 0, type, strike > 0);
   }
 
@@ -808,8 +868,9 @@
     anim.amp += (want - anim.amp) * Math.min(1, dt * 8);
     const type = o.type || "shambler";
     const zombie = rig.kind === "zombie";
-    const freq = zombie ? (type === "runner" ? 5.1 : type === "brute" ? 3.1 : 5.6) : 4.05;
-    const drive = Math.max(spd, zombie ? (type === "runner" ? 0.55 : 0.32) : 0.12);
+    const freq = zombie ? (type === "runner" ? 6.4 : type === "brute" ? 2.6 : 4.4) : 4.05;
+    let drive = Math.max(spd, zombie ? (type === "runner" ? 0.7 : 0.38) : 0.12);
+    if (zombie && type !== "runner") drive *= 0.68 + 0.7 * Math.pow(Math.max(0, Math.sin(anim.phase)), 2);
     anim.phase += dt * drive * freq;
     o.dt = dt;
     if (zombie) poseZombie(rig, anim, o);
@@ -826,8 +887,8 @@
         const s = Math.sin(anim.phase);
         const left = Math.pow(Math.max(0, s), 1.45);
         const right = Math.pow(Math.max(0, -s), 1.45);
-        const heavy = anim.badLeg === 1 ? right * 1.4 + left * 0.5 : left * 1.4 + right * 0.5;
-        mesh.position.y = heavy * 0.06 * anim.amp * scale;
+        const heavy = anim.badLeg === 1 ? right * 1.55 + left * 0.35 : left * 1.55 + right * 0.35;
+        mesh.position.y = heavy * 0.09 * anim.amp * scale + Math.abs(Math.sin(anim.phase * 0.5)) * 0.02 * scale;
       } else {
         const step = Math.pow(Math.abs(Math.sin(anim.phase)), 1.15);
         const breathe = Math.sin(time * 1.55 + anim.phase) * 0.008;
@@ -931,23 +992,28 @@
     if (actorRoot) {
       actorRoot.children.forEach((child) => {
         if (owned.has(child)) return;
-        const titleZ = child.userData && child.userData.titleZ;
-        const gulp = titleZ ? Math.max(0, Math.sin(time * 1.15)) : 0;
-        poseActor(child, dt, { type: "shambler", gulp });
+        const ud = child.userData || {};
+        const lurk = !!ud.titleLurk;
+        const gulp = ud.titleZ || lurk ? Math.max(0, Math.sin(time * (lurk ? 2.6 : 1.15))) : 0;
+        poseActor(child, dt, { type: lurk ? "runner" : "shambler", gulp });
       });
     }
   }
 
   function applyAtmosphere(arena) {
+    fogBase = arena.fog;
     scene.background = new THREE.Color(arena.fog);
     scene.fog = new THREE.FogExp2(arena.fog, arena.density);
     hemi.color.setHex(arena.hemiSky);
     hemi.groundColor.setHex(arena.hemiGround);
+    hemi.intensity = 0.82;
     moon.color.setHex(arena.moon);
-    moon.intensity = arena.moonI * 1.45;
+    moon.intensity = arena.moonI * 1.35;
+    moon.userData.rest = moon.intensity;
+    if (rim) rim.intensity = arena.rain ? 0.55 : 0.32;
     if (rain) rain.visible = !!arena.rain;
     if (arena.rain && !rain) {
-      const n = 700;
+      const n = 1800;
       const geo = new THREE.BufferGeometry();
       const arr = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
@@ -956,7 +1022,7 @@
         arr[i * 3 + 2] = (Math.random() - 0.5) * 46;
       }
       geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-      rain = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaeb6be, size: 0.045, transparent: true, opacity: 0.35 }));
+      rain = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x9aa4b0, size: 0.028, transparent: true, opacity: 0.45, depthWrite: false }));
       scene.add(rain);
     }
   }
@@ -1022,8 +1088,16 @@
     allies = [];
     lastStart = built.start;
     bounds = built.arena.bounds;
-    camDist = built.arena.camDist || 5.5;
+    camDist = built.arena.camDist || 5.6;
     currentArenaId = id;
+    flickerLights = built.flickers || [];
+    const maxA = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    propsRoot.traverse((obj) => {
+      const mats = obj.material ? (Array.isArray(obj.material) ? obj.material : [obj.material]) : [];
+      mats.forEach((m) => {
+        if (m.map) m.map.anisotropy = maxA;
+      });
+    });
     applyAtmosphere(built.arena);
     if (player.mesh) {
       player.mesh.position.set(lastStart.x, 0, lastStart.z);
@@ -1354,7 +1428,11 @@
 
   function hurtFlash() {
     ui.vignette.classList.add("hurt");
-    setTimeout(() => ui.vignette.classList.remove("hurt"), 180);
+    if (ui.bleed) ui.bleed.classList.add("on");
+    setTimeout(() => {
+      ui.vignette.classList.remove("hurt");
+      if (ui.bleed) ui.bleed.classList.remove("on");
+    }, 420);
   }
 
   function noteLivingKill(z) {
@@ -1380,14 +1458,24 @@
     z.fall = 0;
     if (z.cloth) z.cloth.emissive.setHex(0x000000);
     AudioBus.hit();
-    trauma = Math.min(1, trauma + 0.28);
+    trauma = Math.min(1, trauma + 0.45);
     const pool = new THREE.Mesh(
-      new THREE.CircleGeometry(0.28 + Math.random() * 0.15, 8),
-      new THREE.MeshBasicMaterial({ color: 0x4a1c18, transparent: true, opacity: 0.75 })
+      new THREE.CircleGeometry(0.42 + Math.random() * 0.22, 16),
+      new THREE.MeshBasicMaterial({ color: 0x6a1010, transparent: true, opacity: 0.88 })
     );
     pool.rotation.x = -Math.PI / 2;
     pool.position.set(z.mesh.position.x, 0.03, z.mesh.position.z);
     actorRoot.add(pool);
+    for (let i = 0; i < 7; i++) {
+      const drop = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035 + Math.random() * 0.04, 5, 4),
+        new THREE.MeshLambertMaterial({ color: 0x4a0c0c, emissive: 0x2a0404, emissiveIntensity: 0.25 })
+      );
+      const ang = Math.random() * Math.PI * 2;
+      const rad = 0.15 + Math.random() * 0.7;
+      drop.position.set(z.mesh.position.x + Math.cos(ang) * rad, 0.04 + Math.random() * 0.05, z.mesh.position.z + Math.sin(ang) * rad);
+      actorRoot.add(drop);
+    }
     if (z.human) noteLivingKill(z);
   }
 
@@ -1403,9 +1491,9 @@
       player.flinch = 0.16;
     } else {
       AudioBus.hurt();
-      trauma = Math.min(1, trauma + 0.6);
+      trauma = Math.min(1, trauma + 0.85);
       hurtFlash();
-      player.flinch = 0.34;
+      player.flinch = 0.48;
     }
     player.hp -= dmg;
     state.hp = player.hp;
@@ -1720,10 +1808,14 @@
     const hero = makeFigure({ color: 0x2c2926, skin: 0xc49a78, hair: 0x161412, sword: true });
     hero.position.set(0.4, 0, 5.5);
     actorRoot.add(hero);
-    const zed = makeFigure({ color: 0x3a3c36, skin: 0x6a7264, zombie: true, kind: "shambler", seed: 9, lean: 0.36, scale: 1.04 });
+    const zed = makeFigure({ color: 0x3a3c36, skin: 0x6a7264, zombie: true, kind: "shambler", seed: 9, lean: 0.42, scale: 1.08 });
     zed.position.set(-2.2, 0, -1.5);
     zed.userData.titleZ = true;
     actorRoot.add(zed);
+    const lurk = makeFigure({ color: 0x5c4038, skin: 0x7a655c, zombie: true, kind: "runner", seed: 21, lean: 0.52, scale: 0.98 });
+    lurk.position.set(5.6, 0, -6.4);
+    lurk.userData.titleLurk = true;
+    actorRoot.add(lurk);
     currentArenaId = "title";
     setMode("title");
     ui.hint.textContent = "";
@@ -1942,6 +2034,14 @@
     });
   }
 
+  function yawTo(mesh, dirx, dirz, dt, rate) {
+    const want = Math.atan2(-dirx, -dirz);
+    let dy = want - mesh.rotation.y;
+    while (dy > Math.PI) dy -= Math.PI * 2;
+    while (dy < -Math.PI) dy += Math.PI * 2;
+    mesh.rotation.y += dy * Math.min(1, dt * rate);
+  }
+
   function updateZombies(dt) {
     const pos = player.mesh.position;
     zombies.forEach((z) => {
@@ -1960,7 +2060,16 @@
       const pdx = pos.x - z.mesh.position.x;
       const pdz = pos.z - z.mesh.position.z;
       const pdist = Math.hypot(pdx, pdz) || 0.001;
-      z.mesh.rotation.y = Math.atan2(-dirx, -dirz);
+      const rate = z.windup > 0 ? 1.5 : (z.type === "runner" ? 7.2 : z.type === "brute" ? 2.05 : 3.1);
+      yawTo(z.mesh, dirx, dirz, dt, rate);
+      if (!z.human && z.type === "runner") {
+        if (pdist < 3.4 && !z.stung) {
+          z.stung = true;
+          trauma = Math.min(1, trauma + 0.55);
+          hurtFlash();
+          AudioBus.zombie("scream", Math.max(-1, Math.min(1, (z.mesh.position.x - pos.x) / 3)), 0.36, 0.12);
+        } else if (pdist > 6.5) z.stung = false;
+      }
       if (z.stun > 0) {
         z.stun -= dt;
         if (z.cloth) z.cloth.emissive.setHex(0x000000);
@@ -2011,6 +2120,7 @@
         z.windup = z.windup0;
         z.victim = focus.id;
         if (!z.human) z.voiceCd = 0;
+        if (pdist < 3.4) trauma = Math.min(1, trauma + (z.type === "brute" ? 0.22 : 0.1));
       }
       pushOut(z.mesh.position, 0.38);
     });
@@ -2064,25 +2174,38 @@
     if (!player.mesh) return;
     const { f } = flatVectors();
     const pos = player.mesh.position;
+    const near = nearestHostile();
+    const close = clamp(1 - near / 6, 0, 1);
     if (mode === "talk") {
       const id = SPEAKER[speakerNow];
       const focus = findActor(id) || player.mesh;
-      const dest = new THREE.Vector3(focus.position.x + 2.6, 2.15, focus.position.z + 4.0);
-      camera.position.lerp(dest, 1 - Math.exp(-2.4 * dt));
+      camTalk.set(focus.position.x + 2.2, 1.85, focus.position.z + 3.4);
+      camera.position.lerp(camTalk, 1 - Math.exp(-2.4 * dt));
       camera.lookAt(focus.position.x, 1.35, focus.position.z);
+      camera.rotateZ(Math.sin(time * 0.6) * 0.012);
       return;
     }
-    const desired = pos.clone().addScaledVector(f, -camDist);
-    desired.y = 2.15 - pitch * 0.45;
-    camera.position.lerp(desired, 1 - Math.exp(-7 * dt));
-    const look = pos.clone().add(new THREE.Vector3(0, 1.3, 0)).addScaledVector(f, 1.4);
-    look.y += pitch;
-    camera.lookAt(look);
+    camDesired.copy(pos).addScaledVector(f, -camDist);
+    camDesired.y = 2.25 - pitch * 0.45;
+    camera.position.lerp(camDesired, 1 - Math.exp(-7 * dt));
+    camLook.copy(pos);
+    camLook.y += 1.35 + pitch;
+    camLook.addScaledVector(f, 1.5);
+    camera.lookAt(camLook);
+    const sway = mode === "play" ? 1 : 0.2;
+    camera.position.x += Math.sin(time * 1.35) * 0.02 * sway * (0.35 + close);
+    camera.position.y += Math.sin(time * 2.05) * 0.015 * sway;
     if (trauma > 0) {
       const s = trauma * trauma;
-      camera.position.x += (Math.random() - 0.5) * s * 0.28;
-      camera.position.y += (Math.random() - 0.5) * s * 0.18;
-      trauma = Math.max(0, trauma - dt * 1.7);
+      camera.position.x += (Math.random() - 0.5) * s * 0.55;
+      camera.position.y += (Math.random() - 0.5) * s * 0.36;
+      trauma = Math.max(0, trauma - dt * 1.35);
+    }
+    camera.rotateZ(Math.sin(time * 0.85) * 0.01 * (0.25 + close) + (Math.random() - 0.5) * close * 0.008);
+    const wantFov = 51 + close * 5 + (player.hp > 0 && player.hp < 30 ? 2.5 : 0);
+    if (Math.abs(camera.fov - wantFov) > 0.04) {
+      camera.fov += (wantFov - camera.fov) * Math.min(1, dt * 2.8);
+      camera.updateProjectionMatrix();
     }
   }
 
@@ -2117,6 +2240,7 @@
       if (attacking) kind = z.type === "brute" ? "brute" : "snarl";
       else if (z.type === "brute") kind = "brute";
       else if (dist < 2.3 && Math.random() < 0.45) kind = "hiss";
+      else if (z.type === "runner" && dist < 5 && Math.random() < 0.22) kind = "scream";
       else if (z.type === "runner") kind = Math.random() < 0.6 ? "snarl" : "moan";
       else if (Math.random() < 0.18) kind = "snarl";
       const vol = Math.min(0.62, (0.05 + close * close * 0.48) * (z.type === "brute" ? 1.22 : 1) * (attacking ? 1.28 : 1));
@@ -2170,32 +2294,112 @@
     }
   }
 
+  function updateAsh(dt) {
+    if (!ash) return;
+    const p = ash.geometry.attributes.position;
+    const arr = p.array;
+    const ox = camera.position.x;
+    const oz = camera.position.z;
+    const rise = dt * 0.22;
+    const drift = dt * 0.28;
+    for (let i = 0; i < arr.length; i += 3) {
+      let x = arr[i] + drift;
+      let y = arr[i + 1] + rise;
+      let z = arr[i + 2];
+      if (y > 7.5) y = 0.15;
+      if (x - ox > 22) x -= 44;
+      else if (x - ox < -22) x += 44;
+      if (z - oz > 22) z -= 44;
+      else if (z - oz < -22) z += 44;
+      arr[i] = x;
+      arr[i + 1] = y;
+      arr[i + 2] = z;
+    }
+    p.needsUpdate = true;
+  }
+
+  function updateDread(dt) {
+    const playing = mode === "play" && player.mesh && player.hp > 0;
+    const near = playing ? nearestHostile() : 99;
+    const close = playing ? clamp(1 - near / 5.5, 0, 1) : 0;
+    const low = playing && player.hp < 42 ? clamp((42 - player.hp) / 42, 0, 1) : 0;
+    if (ui.app) {
+      ui.app.classList.toggle("dread-close", close > 0.42);
+      ui.app.classList.toggle("dread-low", low > 0.2);
+      ui.app.classList.toggle("dread-critical", playing && player.hp < 22);
+    }
+    if (scene.fog) {
+      fearColor.setHex(fogBase).lerp(fearHot, close * 0.62 + low * 0.28);
+      scene.fog.color.copy(fearColor);
+      if (scene.background && scene.background.isColor) scene.background.copy(fearColor);
+    }
+    const rest = moon.userData.rest || moon.intensity;
+    const blink = Math.sin(time * 19.0) > 0.985 ? 0.45 : 1;
+    moon.intensity = rest * (0.9 + Math.sin(time * 0.8) * 0.08) * blink;
+    flickerLights.forEach((light) => {
+      const base = light.userData.rest || 1;
+      const phase = light.userData.phase || 0;
+      let n = 0.78 + Math.sin(time * 16 + phase) * 0.08 + Math.sin(time * 47 + phase * 2) * 0.05;
+      if (Math.sin(time * 3.1 + phase) > 0.97) n *= 0.35 + Math.random() * 0.3;
+      light.intensity = base * n;
+    });
+    if (rim) rim.intensity = 0.28 + close * 0.45 + Math.sin(time * 1.7) * 0.04;
+    const panic = Math.max(close, low);
+    if (playing && panic > 0.35) {
+      heart -= dt * (1.1 + panic * 1.8);
+      if (heart <= 0) {
+        AudioBus.heartbeat(panic);
+        heart = 0.95 - panic * 0.35;
+      }
+    } else heart = Math.min(1.3, heart + dt);
+  }
+
   function update(dt) {
     if (!simReady) return;
     time += dt;
     updateRain(dt);
+    updateAsh(dt);
+    updateDread(dt);
     if (mode === "title") {
       titleTime += dt;
-      const a = titleTime * 0.08;
-      camera.position.set(Math.sin(a) * 12, 3.3, Math.cos(a) * 12);
-      camera.lookAt(0, 1.2, -1);
+      const a = titleTime * 0.11;
+      camera.position.set(Math.sin(a) * 8.2, 1.85, Math.cos(a) * 8.2);
+      camera.lookAt(0, 1.05, -0.4);
+      camera.rotateZ(Math.sin(titleTime * 0.37) * 0.045);
       const zed = actorRoot.children.find((c) => c.userData && c.userData.titleZ);
       if (zed) {
-        const x = Math.sin(titleTime * 0.35) * 3.2;
-        const z = -1.2 + Math.cos(titleTime * 0.22) * 1.4;
+        const x = Math.sin(titleTime * 0.42) * 2.4;
+        const z = -0.6 + Math.cos(titleTime * 0.28) * 1.1;
         const dx = x - zed.position.x;
         const dz = z - zed.position.z;
         zed.position.x = x;
         zed.position.z = z;
         if (Math.hypot(dx, dz) > 0.0008) zed.rotation.y = Math.atan2(-dx, -dz);
       }
+      const lurk = actorRoot.children.find((c) => c.userData && c.userData.titleLurk);
+      if (lurk) {
+        const tx = 0.35;
+        const tz = 4.6;
+        const dx = tx - lurk.position.x;
+        const dz = tz - lurk.position.z;
+        const dist = Math.hypot(dx, dz) || 0.001;
+        if (dist < 1.15) lurk.position.set(6.2, 0, -7.2);
+        else {
+          lurk.position.x += (dx / dist) * dt * 1.35;
+          lurk.position.z += (dz / dist) * dt * 1.35;
+          lurk.rotation.y = Math.atan2(-dx, -dz);
+        }
+      }
       poseWorld(dt);
       renderer.render(scene, camera);
-      AudioBus.tension(0.08);
+      AudioBus.tension(0.22);
       titleVoice -= dt;
       if (titleVoice <= 0) {
-        titleVoice = 3.6 + Math.random() * 3.2;
-        if (AudioBus.ctx && !AudioBus.muted) AudioBus.zombie("moan", Math.sin(titleTime * 0.7) * 0.4, 0.13, 0.5);
+        titleVoice = 2.4 + Math.random() * 2.6;
+        if (AudioBus.ctx && !AudioBus.muted) {
+          const kind = Math.random() < 0.28 ? "scream" : Math.random() < 0.5 ? "hiss" : "moan";
+          AudioBus.zombie(kind, Math.sin(titleTime * 0.7) * 0.65, kind === "scream" ? 0.1 : 0.16, 0.45);
+        }
       }
       return;
     }
@@ -2214,11 +2418,14 @@
     poseWorld(dt);
     if (mode !== "ending" && mode !== "title") updateCamera(dt);
     const showLabels = !!(current && current.kind === "explore");
-    const hideOrShow = (group) => group.traverse((o) => {
-      if (o.userData && o.userData.isLabel) o.visible = showLabels;
-    });
-    hideOrShow(peopleRoot);
-    hideOrShow(followRoot);
+    if (showLabels !== labelsShown) {
+      labelsShown = showLabels;
+      const hideOrShow = (group) => group.traverse((o) => {
+        if (o.userData && o.userData.isLabel) o.visible = showLabels;
+      });
+      hideOrShow(peopleRoot);
+      hideOrShow(followRoot);
+    }
     const near = player.mesh ? nearestHostile() : 99;
     let tension = mode === "play" ? clamp(1 - near / 9, 0, 1) : 0.04;
     if (player.hp < 35) tension += 0.25;
@@ -2258,39 +2465,73 @@
     ui.confirm = $("confirm");
     ui.look = $("lookmsg");
     ui.vignette = $("vignette");
+    ui.bleed = $("bleed");
     ui.fillHp = $("fill-hp");
     ui.fillSt = $("fill-st");
     ui.fillEdge = $("fill-edge");
     ui.barHp = $("bar-hp");
     ui.btnContinue = $("btn-continue");
 
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    function renderScale() {
+      return Math.min(window.devicePixelRatio || 1, 1.5);
+    }
+
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: (window.devicePixelRatio || 1) <= 1,
+      powerPreference: "high-performance",
+      stencil: false,
+    });
+    renderer.setPixelRatio(renderScale());
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.02;
 
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 180);
-    hemi = new THREE.HemisphereLight(0x8a8078, 0x2a241c, 1);
-    moon = new THREE.DirectionalLight(0xd5d0c8, 1.5);
-    moon.position.set(-14, 22, 8);
+    camera = new THREE.PerspectiveCamera(51, window.innerWidth / window.innerHeight, 0.08, 180);
+    hemi = new THREE.HemisphereLight(0x4a444c, 0x1a1212, 0.82);
+    moon = new THREE.DirectionalLight(0x9aabb8, 1.05);
+    moon.position.set(-16, 24, 10);
     moon.castShadow = true;
     moon.shadow.mapSize.set(1024, 1024);
+    moon.shadow.bias = -0.0006;
+    moon.shadow.normalBias = 0.03;
     moon.shadow.camera.near = 1;
-    moon.shadow.camera.far = 70;
-    moon.shadow.camera.left = -24;
-    moon.shadow.camera.right = 24;
-    moon.shadow.camera.top = 24;
-    moon.shadow.camera.bottom = -24;
-    amb = new THREE.AmbientLight(0x4a4038, 0.28);
-    scene.add(hemi, moon, amb);
-    const moonBall = new THREE.Mesh(new THREE.SphereGeometry(2.4, 16, 12), new THREE.MeshBasicMaterial({ color: 0xe7e1d6 }));
-    moonBall.position.set(-28, 22, -18);
+    moon.shadow.camera.far = 80;
+    moon.shadow.camera.left = -28;
+    moon.shadow.camera.right = 28;
+    moon.shadow.camera.top = 28;
+    moon.shadow.camera.bottom = -28;
+    amb = new THREE.AmbientLight(0x2a2022, 0.22);
+    rim = new THREE.DirectionalLight(0x6a1820, 0.34);
+    rim.position.set(12, 3.5, -14);
+    scene.add(hemi, moon, amb, rim);
+    const moonBall = new THREE.Mesh(
+      new THREE.SphereGeometry(2.8, 16, 12),
+      new THREE.MeshBasicMaterial({ color: 0xb7c0cc })
+    );
+    moonBall.position.set(-32, 18, -22);
     scene.add(moonBall);
+    const ashN = 420;
+    const ashGeo = new THREE.BufferGeometry();
+    const ashArr = new Float32Array(ashN * 3);
+    for (let i = 0; i < ashN; i++) {
+      ashArr[i * 3] = (Math.random() - 0.5) * 44;
+      ashArr[i * 3 + 1] = Math.random() * 7;
+      ashArr[i * 3 + 2] = (Math.random() - 0.5) * 44;
+    }
+    ashGeo.setAttribute("position", new THREE.BufferAttribute(ashArr, 3));
+    ash = new THREE.Points(ashGeo, new THREE.PointsMaterial({
+      color: 0xc8b0a0,
+      size: 0.03,
+      transparent: true,
+      opacity: 0.34,
+      depthWrite: false,
+    }));
+    scene.add(ash);
     propsRoot = new THREE.Group();
     actorRoot = new THREE.Group();
     peopleRoot = new THREE.Group();
@@ -2300,6 +2541,7 @@
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(renderScale());
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
     canvas.addEventListener("contextmenu", (e) => e.preventDefault());
