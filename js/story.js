@@ -109,7 +109,7 @@
         { speaker: "Mia", text: "That's a bite. The skin around it is trying to crawl.", when: { harris: "obvious" } },
       ],
       choices: [
-        { text: "Dean. Sit down and take the shoe off.", next: "confront" },
+        { text: "Dean. Sit down and take the shoe off.", log: "You made Dean take the shoe off.", next: "confront" },
         { text: "Mia, seatbelt. We're leaving while the road is empty.", set: { harris: "secret" }, log: "You saw the blood on Dean's ankle and hid it from Mia.", next: "secret_leave", when: { harris_ne: "obvious" } },
       ],
     },
@@ -1126,6 +1126,199 @@
     return [goal, mia, rico, sam, edge];
   }
 
+  const CHOICE_NODES = [
+    "opening", "shoe", "confront", "after_quiet", "after_told", "ellis_meet", "harris_check",
+    "overpass_calm", "truck", "cal_join", "school_paper", "sword_case", "farm_gate", "sam_truth",
+    "meds", "morning", "voss_talk", "voss_deal", "river",
+  ];
+
+  const BEATS = {
+    opening: { chapter: "The Center", ask: "Night, day 3. Mom might still be close." },
+    shoe: { chapter: "The Center", ask: "Dean's ankle is still moving after his foot stops." },
+    confront: { chapter: "The Center", ask: "Mia already knows what people hide from her." },
+    after_quiet: { chapter: "The Center", ask: "Mia heard Dean's voice change, and then stop." },
+    after_told: { chapter: "The Center", ask: "Mia watched Dean die." },
+    ellis_meet: { chapter: "The Station", ask: "Rico wants a ride. The cooler is his." },
+    harris_check: { chapter: "The Station", ask: "The towel on Dean's ankle is the wrong color." },
+    overpass_calm: { chapter: "The Highway", ask: "A woman in a car is wearing Leo's voice." },
+    truck: { chapter: "The Van", ask: "Ben can still talk. Nora can't do it." },
+    cal_join: { chapter: "The Van", ask: "Sam is going where living people still are." },
+    school_paper: { chapter: "The School", ask: "The note names Leo, Mom, and the bridge." },
+    sword_case: { chapter: "The School", ask: "The Saturday sword is in the trophy case." },
+    farm_gate: { chapter: "Walsh Farm", ask: "Dale wants the sword in the dirt before anyone talks." },
+    sam_truth: { chapter: "Walsh Farm", ask: "Jonah spoke about the bridge, then forgot he had." },
+    meds: { chapter: "Walsh Farm", ask: "One bottle. Helen or Jonah." },
+    morning: { chapter: "Morning", ask: "One quiet hour before the trucks." },
+    voss_talk: { chapter: "The Block", ask: "Kane wants half the food." },
+    voss_deal: { chapter: "The Block", ask: "Rico came back. Kane is still in the road." },
+    river: { chapter: "Walsh Gate", ask: "Every road is visible from the gate." },
+  };
+
+  const MARKS = {
+    opening: [
+      { word: "Wait", mark: "you waited in the dark for Mom" },
+      { word: "Shoulder", mark: "you moved Mia before she was ready" },
+      { word: "Shield", mark: "you put Dean between Mia and the dead" },
+    ],
+    shoe: [
+      { word: "Ankle", mark: "you made Dean take the shoe off" },
+      { word: "Hide", mark: "you hid the blood on Dean's ankle" },
+    ],
+    confront: [
+      { word: "Wall", mark: "you killed Dean where Mia could only hear it" },
+      { word: "Truth", mark: "you made Dean tell Mia, then ended it" },
+      { word: "Towel", mark: "you let the bite ride in the back seat" },
+    ],
+    after_quiet: [
+      { word: "Seen", mark: "you told Mia that hiding it was worse" },
+      { word: "Done", mark: "you told Mia it was done" },
+    ],
+    after_told: [
+      { word: "Eyes", mark: "you told Mia not to look away" },
+      { word: "Carry", mark: "you said you would carry Dean" },
+    ],
+    ellis_meet: [
+      { word: "Ride", mark: "you let Rico into the car" },
+      { word: "Cooler", mark: "you took Rico's peaches" },
+      { word: "Pumps", mark: "you left Rico at the pumps" },
+    ],
+    harris_check: [
+      { word: "Again", mark: "you killed Dean at the pumps, out of Mia's sight" },
+      { word: "Show", mark: "you showed Mia the bite, then ended it" },
+      { word: "Miles", mark: "you kept driving with the bite" },
+    ],
+    overpass_calm: [
+      { word: "Glass", mark: "you broke the glass before she got out" },
+      { word: "Leave", mark: "you left her tapping Mia's name on the glass" },
+    ],
+    truck: [
+      { word: "Quick", mark: "you killed Ben while he could still talk" },
+      { word: "Waited", mark: "you waited until Ben turned" },
+      { word: "Car", mark: "you gave Nora the car and walked" },
+    ],
+    cal_join: [
+      { word: "Sam", mark: "you let Sam walk with you" },
+      { word: "Away", mark: "you sent Sam down a different road" },
+    ],
+    school_paper: [
+      { word: "Ask", mark: "you let Mia say Leo's name before the note" },
+      { word: "Note", mark: "you put the note in Mia's hand" },
+      { word: "Coat", mark: "you hid the note in your coat" },
+    ],
+    sword_case: [
+      { word: "Class", mark: "you told Mia why the sword was at school" },
+      { word: "Later", mark: "you took the sword and saved the explanation" },
+    ],
+    farm_gate: [
+      { word: "Dirt", mark: "you put the sword in the dirt for Dale" },
+      { word: "Hold", mark: "you would not put the sword down" },
+    ],
+    sam_truth: [
+      { word: "Bite", mark: "you called Jonah's fever a bite" },
+      { word: "Fever", mark: "you called it a normal fever" },
+    ],
+    meds: [
+      { word: "Helen", mark: "you gave the bottle to Helen" },
+      { word: "Easier", mark: "you called it a fever, then gave the bottle to Helen" },
+      { word: "Jonah", mark: "you gave the bottle to Jonah" },
+      { word: "Bottle", mark: "you kept the bottle" },
+    ],
+    morning: [
+      { word: "Quiet", mark: "you sat with Mia the way you promised" },
+      { word: "Fence", mark: "you walked the fence and left the sword in the dirt" },
+      { word: "Peaches", mark: "you gave Mia the last of the peaches" },
+      { word: "Stone", mark: "you spent the quiet hour on the sword" },
+    ],
+    voss_talk: [
+      { word: "Return", mark: "you asked Rico to come back" },
+      { word: "Trucks", mark: "you bought the road, and Rico left with the trucks" },
+      { word: "Half", mark: "you gave Kane half the food" },
+      { word: "Refuse", mark: "you refused Kane" },
+      { word: "Duel", mark: "you fought Kane alone" },
+      { word: "Trade", mark: "you put Mia on the table" },
+    ],
+    voss_deal: [
+      { word: "Sack", mark: "you gave Kane half the food after Rico came back" },
+      { word: "Porch", mark: "you refused Kane with Rico beside you" },
+      { word: "Circle", mark: "you fought Kane alone after Rico came back" },
+      { word: "Table", mark: "you put Mia on the table after Rico came back" },
+    ],
+    river: [
+      { word: "Watch", mark: "you stayed and took a watch" },
+      { word: "Bury", mark: "you stayed to bury the morning" },
+      { word: "Bridge", mark: "you took Mia to the bridge for Mom and Leo" },
+      { word: "Signal", mark: "you followed Sam's radio" },
+      { word: "Solitary", mark: "you left before anyone could follow" },
+    ],
+  };
+
+  const AMBIGUOUS_LOG = {
+    "You gave Kane half the food.": true,
+    "You refused Kane.": true,
+    "You offered Kane a one-on-one fight.": true,
+    "You offered Mia to Kane to spare the farm.": true,
+  };
+
+  function faceOf(nodeId, index) {
+    const row = MARKS[nodeId];
+    return (row && row[index]) || { word: "Road", mark: "you chose" };
+  }
+
+  function choiceEntry(s, nodeId, choice, index) {
+    const beat = BEATS[nodeId] || { chapter: "The road", ask: "A choice." };
+    const face = faceOf(nodeId, index);
+    return {
+      node: nodeId,
+      day: dayOf(nodeId),
+      chapter: beat.chapter,
+      ask: beat.ask,
+      said: fill(choice.text, s),
+      log: choice.log ? fill(choice.log, s) : "",
+      mark: face.mark,
+      word: face.word,
+    };
+  }
+
+  function record(s, nodeId, choice) {
+    if (!s.choices) s.choices = [];
+    const node = NODES[nodeId];
+    const index = node && node.choices ? node.choices.indexOf(choice) : -1;
+    s.choices.push(choiceEntry(s, nodeId, choice, index < 0 ? 0 : index));
+  }
+
+  function reconstruct(s) {
+    const journal = s.journal || [];
+    const ricoBack = journal.some((line) => line.indexOf("asked Rico to come back") !== -1);
+    const kaneNode = ricoBack ? "voss_deal" : "voss_talk";
+    const out = [];
+    CHOICE_NODES.forEach((id) => {
+      const node = NODES[id];
+      if (!node || !node.choices) return;
+      const index = node.choices.findIndex((c) => {
+        if (!c.log) return false;
+        const line = fill(c.log, s);
+        if (journal.indexOf(line) < 0) return false;
+        if (AMBIGUOUS_LOG[line] && id !== kaneNode) return false;
+        return true;
+      });
+      if (index >= 0) out.push(choiceEntry(s, id, node.choices[index], index));
+    });
+    return out;
+  }
+
+  function roadSentence(choices) {
+    const marks = (choices || []).map((c) => c.mark).filter(Boolean);
+    if (!marks.length) return "";
+    if (marks.length === 1) return marks[0].charAt(0).toUpperCase() + marks[0].slice(1) + ".";
+    const head = marks.slice(0, -1).join(", ");
+    const sentence = head + ", and " + marks[marks.length - 1];
+    return sentence.charAt(0).toUpperCase() + sentence.slice(1) + ".";
+  }
+
+  function sealOf(choices) {
+    return (choices || []).map((c) => c.word).filter(Boolean).join("  ·  ");
+  }
+
   function endingOf(s) {
     if (!s.juneAlive) return "trade";
     if (s.road === "brother") return "june";
@@ -1175,7 +1368,9 @@
 
   function ending(s) {
     const type = endingOf(s);
-    const mem = memories(s);
+    const choices = Array.isArray(s.choices) ? s.choices : [];
+    const road = roadSentence(choices);
+    const mem = choices.length ? [] : memories(s);
     const closings = {
       door: [
         "In the morning the sword is by the door, where people can see it. Mia steps over it. Someone on the fence calls your name like it is a job.",
@@ -1210,11 +1405,15 @@
       ash: "Alone",
       trade: "The Trade",
     };
+    const paragraphs = mem.concat(closings[type]);
     return {
       type,
       title: titles[type],
       kicker: "Day 5  —  " + (s.name || "Alex"),
-      paragraphs: mem.concat(closings[type]),
+      seal: sealOf(choices),
+      road,
+      paragraphs,
+      spoken: (road ? [road] : []).concat(paragraphs),
     };
   }
 
@@ -1274,6 +1473,7 @@
       juneDownTold: 0,
       ellisDownTold: 0,
       calDownTold: 0,
+      choices: [],
       journal: ["Day 3. Mom has Leo. They are going to the army bridge. Mia found you at the community center. You have a pipe and a short knife. The school sword is still at the school."],
       hp: 100,
       place: "Millford",
@@ -1311,5 +1511,5 @@
     }
   }
 
-  root.Story = { NODES, match, apply, fill, resolve, onEnter, relations, ending, createState, dayOf, remember, readyLines, hear, migrate };
+  root.Story = { NODES, match, apply, fill, resolve, onEnter, relations, ending, createState, dayOf, remember, readyLines, hear, migrate, record, reconstruct, sealOf };
 })(window);

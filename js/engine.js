@@ -39,6 +39,10 @@
   let keys = new Set();
   let rmb = false;
   let journalOpen = false;
+  let pathOpen = false;
+  let loreOpen = false;
+  let loreFrom = "title";
+  let loreId = "you";
   let modeBeforeJournal = "play";
   let cardTimer = 0;
   let winTimer = 0;
@@ -1054,6 +1058,11 @@
     }
   }
 
+  const _armDown = new THREE.Vector3(0, -1, 0);
+  const _armAim = new THREE.Vector3();
+  const _armInv = new THREE.Quaternion();
+  const _armQuat = new THREE.Quaternion();
+
   function poseZombie(rig, anim, o) {
     const R = rig.rest;
     const type = o.type || "shambler";
@@ -1114,7 +1123,14 @@
         rig.shoulders[i].rotation.x = lerp(chambered, down, ease);
         rig.shoulders[i].rotation.z = lerp(R.shZ[i], i === 0 ? 0.42 : -0.32, raise * (1 - ease));
         rig.elbows[i].rotation.x = 0.18 + raise * 0.7 * (1 - ease * 0.65);
-        if (rig.hands[i]) rig.hands[i].rotation.x = -0.25 - raise * 0.85 + ease * 0.35;
+        if (rig.hands[i]) {
+          rig.hands[i].rotation.x = -0.25 - raise * 0.85 + ease * 0.35;
+          if (type === "shambler") {
+            rig.hands[i].children.forEach((part) => {
+              if (part.geometry && part.geometry.type === "CapsuleGeometry") part.rotation.x = -1.15;
+            });
+          }
+        }
       }
       rig.hips[lead].rotation.x = R.hips[lead] + 0.5 * ease;
       rig.knees[lead].rotation.x = R.knees[lead] - 0.35 * ease;
@@ -1188,6 +1204,23 @@
         if (rig.hands[i]) rig.hands[i].rotation.x = -0.4 - open * 0.5;
       }
       if (rig.eyeMat) rig.eyeMat.emissiveIntensity = 0.7 + open * 1.1;
+    }
+    if (type === "shambler" && a > 0.02 && (o.strike || 0) <= 0) {
+      _armInv.copy(rig.inner.quaternion).invert();
+      for (let i = 0; i < 2; i++) {
+        const side = i === 0 ? -1 : 1;
+        const pump = Math.sin(phase + i * Math.PI) * 0.04;
+        _armAim.set(side * 0.2, pump, -1).normalize().applyQuaternion(_armInv);
+        _armQuat.setFromUnitVectors(_armDown, _armAim);
+        rig.shoulders[i].quaternion.slerp(_armQuat, a);
+        rig.elbows[i].rotation.x = lerp(rig.elbows[i].rotation.x, 0.02, a);
+        if (rig.hands[i]) {
+          rig.hands[i].rotation.x = lerp(rig.hands[i].rotation.x, 0, a);
+          rig.hands[i].children.forEach((part) => {
+            if (part.geometry && part.geometry.type === "CapsuleGeometry") part.rotation.x = lerp(-1.15, -0.12, a);
+          });
+        }
+      }
     }
     if (type === "bloater" && rig.belly) {
       const swell = (o.fuse || 0) > 0 ? 1 + (1 - Math.min(1, o.fuse / 0.95)) * 0.75 : 1;
@@ -1568,7 +1601,7 @@
   }
 
   function equip(name) {
-    if (!state || mode !== "play" || journalOpen || player.attack > 0) return;
+    if (!state || mode !== "play" || journalOpen || pathOpen || player.attack > 0) return;
     if (name === "sword" && !(state.swordRank > 0)) {
       showTip("The sword is still at the school.", 2.4);
       return;
@@ -2032,6 +2065,7 @@
 
   function openJournal() {
     if (!state || mode === "title" || mode === "ending" || mode === "card") return;
+    if (pathOpen) closePath();
     if (journalOpen) return closeJournal();
     journalOpen = true;
     modeBeforeJournal = mode;
@@ -2043,6 +2077,168 @@
   function closeJournal() {
     journalOpen = false;
     show(ui.journal, false);
+  }
+
+  function lorePlayerName() {
+    if (state && state.name) return state.name;
+    const field = $("name");
+    const clean = field ? String(field.value || "").replace(/[<>]/g, "").trim().slice(0, 18) : "";
+    return clean || "Alex";
+  }
+
+  function selectLore(id) {
+    const people = Story.people || [];
+    if (!people.some((p) => p.id === id)) id = (people[0] && people[0].id) || "";
+    loreId = id;
+    const name = lorePlayerName();
+    if (ui.loreList) {
+      ui.loreList.querySelectorAll(".person").forEach((b) => {
+        const on = b.dataset.id === id;
+        b.classList.toggle("on", on);
+        if (on) b.setAttribute("aria-current", "true");
+        else b.removeAttribute("aria-current");
+      });
+    }
+    if (!ui.loreRead) return;
+    const person = people.find((p) => p.id === id);
+    ui.loreRead.innerHTML = "";
+    if (!person) return;
+    const h = document.createElement("h3");
+    h.textContent = Story.fill(person.name, { name });
+    ui.loreRead.appendChild(h);
+    const role = document.createElement("p");
+    role.className = "lore-role";
+    role.textContent = person.role;
+    ui.loreRead.appendChild(role);
+    if (person.said) {
+      const quote = document.createElement("p");
+      quote.className = "lore-line";
+      quote.textContent = Story.fill(person.said, { name });
+      ui.loreRead.appendChild(quote);
+    }
+    (person.text || []).forEach((para) => {
+      const el = document.createElement("p");
+      el.className = "lore-body";
+      el.textContent = Story.fill(para, { name });
+      ui.loreRead.appendChild(el);
+    });
+    ui.loreRead.scrollTop = 0;
+    const btn = ui.loreList && ui.loreList.querySelector('.person[data-id="' + id + '"]');
+    if (btn && btn.scrollIntoView) btn.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
+  function fillLore() {
+    const people = Story.people || [];
+    const name = lorePlayerName();
+    ui.loreList.innerHTML = "";
+    let group = "";
+    people.forEach((p) => {
+      if (p.group !== group) {
+        group = p.group;
+        const label = document.createElement("p");
+        label.className = "lore-group";
+        label.textContent = group;
+        ui.loreList.appendChild(label);
+      }
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "person";
+      b.dataset.id = p.id;
+      b.textContent = Story.fill(p.name, { name });
+      b.addEventListener("click", () => selectLore(p.id));
+      ui.loreList.appendChild(b);
+    });
+    selectLore(loreId);
+  }
+
+  function openLore(from) {
+    if (loreOpen) return;
+    if (journalOpen) closeJournal();
+    if (pathOpen) closePath();
+    loreOpen = true;
+    loreFrom = from || "title";
+    if (loreFrom === "title") show(ui.title, false);
+    if (loreFrom === "pause") show(ui.pause, false);
+    show(ui.confirm, false);
+    fillLore();
+    show(ui.lore, true);
+  }
+
+  function closeLore(restore) {
+    const from = loreFrom;
+    loreOpen = false;
+    if (ui.lore) show(ui.lore, false);
+    if (restore === false) return;
+    if (from === "pause" && mode === "pause") show(ui.pause, true);
+    else if (mode === "title") show(ui.title, true);
+  }
+
+  function stepLore(dir) {
+    const people = Story.people || [];
+    if (!people.length) return;
+    let i = people.findIndex((p) => p.id === loreId);
+    if (i < 0) i = 0;
+    selectLore(people[(i + dir + people.length) % people.length].id);
+  }
+
+  function fillPath() {
+    const choices = state.choices || [];
+    ui.pathLead.textContent = choices.length
+      ? "These are the words you chose, in the order the days happened. The ending is this list. Change one line and the ending changes with it."
+      : "No choices yet. The first one is still ahead of you.";
+    ui.pathList.innerHTML = "";
+    let lastDay = 0;
+    choices.forEach((c) => {
+      if (c.day !== lastDay) {
+        lastDay = c.day;
+        const h = document.createElement("h3");
+        h.textContent = "Day " + c.day;
+        ui.pathList.appendChild(h);
+      }
+      const beat = document.createElement("article");
+      beat.className = "path-beat";
+      const where = document.createElement("p");
+      where.className = "path-where";
+      where.textContent = c.chapter || "The road";
+      const ask = document.createElement("p");
+      ask.className = "path-ask";
+      ask.textContent = c.ask || "";
+      const said = document.createElement("p");
+      said.className = "path-said";
+      said.textContent = c.said || "";
+      beat.appendChild(where);
+      beat.appendChild(ask);
+      beat.appendChild(said);
+      if (c.log) {
+        const log = document.createElement("p");
+        log.className = "path-log";
+        log.textContent = c.log;
+        beat.appendChild(log);
+      }
+      ui.pathList.appendChild(beat);
+    });
+    if (choices.length && ui.pathSeal) {
+      ui.pathSeal.textContent = "This ending  ·  " + Story.sealOf(choices);
+      show(ui.pathSeal, true);
+    } else if (ui.pathSeal) {
+      ui.pathSeal.textContent = "";
+      show(ui.pathSeal, false);
+    }
+  }
+
+  function openPath() {
+    if (!state || mode === "title" || mode === "card") return;
+    if (pathOpen) return closePath();
+    if (journalOpen) closeJournal();
+    pathOpen = true;
+    fillPath();
+    show(ui.path, true);
+    if (document.pointerLockElement === ui.canvas) document.exitPointerLock();
+  }
+
+  function closePath() {
+    pathOpen = false;
+    show(ui.path, false);
   }
 
   function hurtFlash() {
@@ -2297,7 +2493,7 @@
   }
 
   function tryAttack() {
-    if (mode !== "play" || journalOpen || player.lock > 0) return;
+    if (mode !== "play" || journalOpen || pathOpen || player.lock > 0) return;
     if (player.dodge > 0) return;
     if (player.attack > 0) { player.queue = true; return; }
     if (player.stamina < 4) return;
@@ -2316,7 +2512,7 @@
   }
 
   function tryDodge() {
-    if (mode !== "play" || journalOpen || player.lock > 0 || player.dodge > 0 || player.stamina < 18) return;
+    if (mode !== "play" || journalOpen || pathOpen || player.lock > 0 || player.dodge > 0 || player.stamina < 18) return;
     const { f, r } = flatVectors();
     let fx = 0, rx = 0;
     if (keys.has("KeyW")) fx += 1;
@@ -2399,7 +2595,7 @@
   }
 
   function advanceTalk() {
-    if (mode !== "talk" || journalOpen) return;
+    if (mode !== "talk" || journalOpen || pathOpen) return;
     if (shownChars < fullLine.length) {
       shownChars = fullLine.length;
       ui.line.textContent = fullLine;
@@ -2415,6 +2611,7 @@
     if (mode !== "talk" || !choicesUp) return;
     const c = visibleChoices[index];
     if (!c) return;
+    Story.record(state, state.node, c);
     Story.apply(c.set, state);
     if (c.log) state.journal.push(Story.fill(c.log, state));
     AudioBus.ui();
@@ -2433,9 +2630,18 @@
   }
 
   function showEnding() {
+    closePath();
     const end = Story.ending(state);
     ui.endKicker.textContent = end.kicker;
     ui.endTitle.textContent = end.title;
+    if (ui.endSeal) {
+      ui.endSeal.textContent = end.seal ? "This ending  ·  " + end.seal : "";
+      show(ui.endSeal, !!end.seal);
+    }
+    if (ui.endRoad) {
+      ui.endRoad.textContent = end.road || "";
+      show(ui.endRoad, !!end.road);
+    }
     ui.endps.innerHTML = "";
     end.paragraphs.forEach((para) => {
       const p = document.createElement("p");
@@ -2443,7 +2649,7 @@
       ui.endps.appendChild(p);
     });
     setMode("ending");
-    AudioBus.speakSequence(end.paragraphs, "Narrator");
+    AudioBus.speakSequence(end.spoken || end.paragraphs, "Narrator");
     save();
   }
 
@@ -2527,6 +2733,8 @@
     node.id = id;
     clearTimeout(cardTimer);
     closeJournal();
+    closePath();
+    closeLore(false);
     state.node = id;
     current = node;
     show(ui.title, false);
@@ -2566,6 +2774,7 @@
       if (!state._did) state._did = {};
       if (!state.journal) state.journal = [];
       if (!state.pending) state.pending = {};
+      if (!Array.isArray(state.choices)) state.choices = Story.reconstruct(state);
       state.day = state.day || Story.dayOf(raw.node);
       state.falls = state.falls || 0;
       state.juneDown = state.juneDown || 0;
@@ -2582,6 +2791,8 @@
     if (cardTimer) clearTimeout(cardTimer);
     AudioBus.stopSpeak();
     closeJournal();
+    closePath();
+    closeLore(false);
     state = state || null;
     clearHazards();
     player.limp = 0;
@@ -3542,7 +3753,7 @@
       }
       return;
     }
-    if (journalOpen) {
+    if (journalOpen || pathOpen || loreOpen) {
       renderer.render(scene, camera);
       return;
     }
@@ -3595,12 +3806,21 @@
     ui.pause = $("pause");
     ui.dead = $("dead");
     ui.journal = $("journal");
+    ui.lore = $("lore");
+    ui.loreList = $("lore-list");
+    ui.loreRead = $("lore-read");
     ui.rel = $("rel");
     ui.log = $("log");
     ui.end = $("end");
     ui.endKicker = $("end-kicker");
     ui.endTitle = $("end-title");
+    ui.endSeal = $("end-seal");
+    ui.endRoad = $("end-road");
     ui.endps = $("endps");
+    ui.path = $("path");
+    ui.pathLead = $("path-lead");
+    ui.pathList = $("path-list");
+    ui.pathSeal = $("path-seal");
     ui.confirm = $("confirm");
     ui.look = $("lookmsg");
     ui.vignette = $("vignette");
@@ -3697,7 +3917,7 @@
       AudioBus.ensure();
       if (mode === "black") { goNext(Story.resolve(current, state)); return; }
       if (mode === "talk") { if (!choicesUp) advanceTalk(); return; }
-      if (mode !== "play" || journalOpen) return;
+      if (mode !== "play" || journalOpen || pathOpen) return;
       try {
         if (document.pointerLockElement !== canvas) canvas.requestPointerLock();
       } catch (err) { /* mouse look is optional */ }
@@ -3711,6 +3931,12 @@
     window.addEventListener("mousedown", (e) => { if (e.button === 2) rmb = true; });
     window.addEventListener("mouseup", (e) => { if (e.button === 2) rmb = false; });
     window.addEventListener("keydown", (e) => {
+      if (loreOpen) {
+        if (e.code === "Escape") { e.preventDefault(); closeLore(); return; }
+        if (e.code === "ArrowDown" || e.code === "ArrowRight") { e.preventDefault(); stepLore(1); return; }
+        if (e.code === "ArrowUp" || e.code === "ArrowLeft") { e.preventDefault(); stepLore(-1); return; }
+        return;
+      }
       keys.add(e.code);
       if (e.code === "Space") e.preventDefault();
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
@@ -3720,9 +3946,11 @@
         try { localStorage.setItem(MUTE, muted ? "1" : "0"); } catch (err) { /* ignore */ }
         $("btn-sound").textContent = muted ? "Sound off" : "Sound on";
       }
-      if (e.code === "KeyJ") openJournal();
+      if (e.code === "KeyJ" && !e.repeat) openJournal();
+      if (e.code === "KeyC" && !e.repeat) openPath();
       if (e.code === "Escape") {
-        if (journalOpen) closeJournal();
+        if (pathOpen) closePath();
+        else if (journalOpen) closeJournal();
         else if (mode === "play") setMode("pause");
         else if (mode === "pause") setMode("play");
       }
@@ -3740,7 +3968,7 @@
         const d = Math.hypot(player.mesh.position.x - m.x, player.mesh.position.z - m.z);
         if (d < 2.5 && nearestHostile() > 2.1) finishExplore();
       }
-      if (mode === "talk" && choicesUp && /^Digit[1-4]$/.test(e.code)) choose(Number(e.code.slice(5)) - 1);
+      if (mode === "talk" && choicesUp && /^Digit[1-9]$/.test(e.code)) choose(Number(e.code.slice(5)) - 1);
     });
     window.addEventListener("keyup", (e) => keys.delete(e.code));
     window.addEventListener("blur", () => { keys.clear(); rmb = false; });
@@ -3767,9 +3995,17 @@
       $("btn-sound").textContent = muted ? "Sound off" : "Sound on";
       if (!muted) AudioBus.ensure();
     });
+    $("btn-lore").addEventListener("click", () => openLore("title"));
+    $("btn-pause-lore").addEventListener("click", () => openLore("pause"));
+    $("btn-close-lore").addEventListener("click", () => closeLore());
     $("btn-resume").addEventListener("click", () => setMode("play"));
     $("btn-journal").addEventListener("click", openJournal);
+    const choicesBtn = $("btn-choices");
+    if (choicesBtn) choicesBtn.addEventListener("click", openPath);
+    $("btn-journal-path").addEventListener("click", openPath);
     $("btn-close-journal").addEventListener("click", closeJournal);
+    $("btn-close-path").addEventListener("click", closePath);
+    $("btn-end-path").addEventListener("click", openPath);
     $("btn-quit").addEventListener("click", () => { save(); showTitle(); });
     $("btn-retry").addEventListener("click", () => beginNode(state.node, "retry"));
     $("btn-dead-title").addEventListener("click", () => showTitle());

@@ -198,33 +198,185 @@
   }
 
   const CAST = {
-    Narrator: { pitch: 0.86, rate: 0.9, prefer: "female", slot: 0 },
-    Alex: { pitch: 1.0, rate: 0.98, prefer: "female", slot: 1 },
-    Mia: { pitch: 1.28, rate: 1.06, prefer: "female", slot: 0 },
-    Dean: { pitch: 1.06, rate: 1.02, prefer: "male", slot: 0 },
-    Rico: { pitch: 0.68, rate: 0.86, prefer: "male", slot: 1 },
-    Nora: { pitch: 0.98, rate: 0.9, prefer: "female", slot: 1 },
-    Ben: { pitch: 0.84, rate: 0.74, prefer: "male", slot: 0 },
-    Sam: { pitch: 0.74, rate: 0.82, prefer: "male", slot: 1 },
-    Dale: { pitch: 0.62, rate: 0.86, prefer: "male", slot: 0 },
-    Helen: { pitch: 1.16, rate: 0.76, prefer: "female", slot: 1 },
-    Jonah: { pitch: 1.42, rate: 0.92, prefer: "male", slot: 0 },
-    Ray: { pitch: 0.8, rate: 0.98, prefer: "male", slot: 1 },
-    Kane: { pitch: 0.54, rate: 0.78, prefer: "male", slot: 0 },
+    Narrator: { pitch: 0.96, rate: 0.91, volume: 1, prefer: "female", hints: ["aria", "sonia", "libby", "zira"], gap: 260, contour: 0.05, style: "story", breath: "open" },
+    Alex: { pitch: 1.0, rate: 1.0, volume: 1, prefer: "any", hints: ["jenny", "guy", "andrew"], gap: 140, contour: 0.045, style: "plain", breath: "open" },
+    Mia: { pitch: 1.12, rate: 1.05, volume: 1, prefer: "female", hints: ["jenny", "zira"], gap: 100, contour: 0.07, style: "young", breath: "open" },
+    Dean: { pitch: 1.06, rate: 1.03, volume: 1, prefer: "male", hints: ["guy", "ryan", "mark"], gap: 150, contour: 0.065, style: "nervous", breath: "open" },
+    Rico: { pitch: 0.9, rate: 0.98, volume: 1, prefer: "male", hints: ["david", "mark", "davis"], gap: 120, contour: 0.025, style: "blunt", breath: "tight" },
+    Nora: { pitch: 1.0, rate: 0.93, volume: 1, prefer: "female", hints: ["michelle", "eva", "catherine", "zira"], gap: 200, contour: 0.05, style: "careful", breath: "open" },
+    Ben: { pitch: 0.95, rate: 0.84, volume: 0.9, prefer: "male", hints: ["tony", "george", "guy"], gap: 280, contour: 0.035, style: "weak", breath: "open" },
+    Sam: { pitch: 0.93, rate: 0.94, volume: 1, prefer: "male", hints: ["andrew", "christopher", "david"], gap: 180, contour: 0.03, style: "calm", breath: "open" },
+    Dale: { pitch: 0.86, rate: 0.92, volume: 1, prefer: "male", hints: ["brian", "eric", "david"], gap: 160, contour: 0.02, style: "blunt", breath: "tight" },
+    Helen: { pitch: 0.9, rate: 0.88, volume: 1, prefer: "female", hints: ["susan", "hazel", "sonia", "zira"], gap: 300, contour: 0.028, style: "older", breath: "open" },
+    Jonah: { pitch: 1.18, rate: 0.9, volume: 0.95, prefer: "female", hints: ["ana"], gap: 220, contour: 0.055, style: "child", breath: "open" },
+    Ray: { pitch: 0.88, rate: 0.99, volume: 1, prefer: "male", hints: ["fred", "daniel", "david"], gap: 90, contour: 0.015, style: "flat", breath: "tight" },
+    Kane: { pitch: 0.82, rate: 0.86, volume: 0.96, prefer: "male", hints: ["davis", "brian", "david"], gap: 260, contour: 0.02, style: "low", breath: "tight" },
   };
 
-  function pickVoice(cast) {
+  const ASSIGN_ORDER = ["Narrator", "Mia", "Jonah", "Helen", "Nora", "Dean", "Sam", "Rico", "Dale", "Kane", "Ben", "Ray", "Alex"];
+  const FEMALE_VOICE = /zira|heera|samantha|victoria|karen|moira|fiona|susan|linda|hazel|aria|jenny|sara|libby|sonia|natasha|catherine|ana|michelle|eva|emma|ava|female|woman/i;
+  const MALE_VOICE = /david|mark|ravi|guy|george|daniel|james|fred|ryan|eric|andrew|brian|davis|tony|christopher|brandon|steffan|roger|male|\bman\b/i;
+  let voiceSig = "";
+  const voiceByWho = new Map();
+  const voiceUses = new Map();
+
+  function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+  function currentVoices() {
     const synth = window.speechSynthesis;
-    if (!synth) return null;
-    const voices = synth.getVoices();
-    if (!voices.length) return null;
-    const en = voices.filter((v) => /^en/i.test(v.lang));
-    const pool = en.length ? en : voices;
-    const female = /zira|heera|samantha|victoria|karen|moira|fiona|susan|linda|hazel|aria|jenny|sara|libby|female/i;
-    const male = /david|mark|ravi|guy|george|daniel|alex|fred|ryan|eric|male/i;
-    const matched = pool.filter((v) => (cast.prefer === "female" ? female : male).test(v.name));
-    const list = matched.length ? matched : pool;
-    return list[(cast.slot || 0) % list.length] || null;
+    if (!synth) return [];
+    const all = synth.getVoices() || [];
+    const us = all.filter((v) => /^en-US/i.test(v.lang || ""));
+    if (us.length) return us;
+    const gb = all.filter((v) => /^en-GB/i.test(v.lang || ""));
+    if (gb.length) return gb;
+    const en = all.filter((v) => /^en/i.test(v.lang || "") || /english/i.test(v.name || ""));
+    return en.length ? en : all.slice();
+  }
+
+  function voiceRank(v) {
+    const name = v.name || "";
+    let score = 0;
+    if (/natural|neural/i.test(name)) score += 80;
+    if (/online/i.test(name)) score += 6;
+    if (/en-US/i.test(v.lang || "")) score += 24;
+    else if (/en-GB/i.test(v.lang || "")) score += 14;
+    else if (/^en/i.test(v.lang || "")) score += 8;
+    if (/desktop/i.test(name) && !/natural|neural/i.test(name)) score -= 10;
+    return score;
+  }
+
+  function genderOf(v) {
+    const name = v.name || "";
+    const female = FEMALE_VOICE.test(name);
+    const male = MALE_VOICE.test(name);
+    if (female && !male) return "female";
+    if (male && !female) return "male";
+    return "any";
+  }
+
+  function takeVoice(who, voice) {
+    voiceByWho.set(who, voice);
+    const key = voice.voiceURI || voice.name;
+    voiceUses.set(key, (voiceUses.get(key) || 0) + 1);
+    return voice;
+  }
+
+  function assignVoices() {
+    const voices = currentVoices();
+    const sig = voices.map((v) => v.voiceURI || v.name).sort().join("\n");
+    if (!voices.length || (sig === voiceSig && voiceByWho.size)) return;
+    voiceSig = sig;
+    voiceByWho.clear();
+    voiceUses.clear();
+    const ranked = voices.slice().sort((a, b) => voiceRank(b) - voiceRank(a));
+    function unused(list, pred) {
+      for (let i = 0; i < list.length; i++) {
+        const v = list[i];
+        const key = v.voiceURI || v.name;
+        if ((voiceUses.get(key) || 0) > 0) continue;
+        if (!pred || pred(v)) return v;
+      }
+      return null;
+    }
+    ASSIGN_ORDER.forEach((name) => {
+      const hints = CAST[name].hints || [];
+      let found = null;
+      for (let i = 0; i < hints.length && !found; i++) {
+        const hint = hints[i];
+        found = unused(ranked, (v) => (v.name || "").toLowerCase().indexOf(hint) !== -1);
+      }
+      if (found) takeVoice(name, found);
+    });
+    ASSIGN_ORDER.forEach((name) => {
+      if (voiceByWho.has(name)) return;
+      const prefer = CAST[name].prefer;
+      const found = prefer === "any"
+        ? unused(ranked)
+        : unused(ranked, (v) => genderOf(v) === prefer);
+      if (found) takeVoice(name, found);
+    });
+    ASSIGN_ORDER.forEach((name) => {
+      if (voiceByWho.has(name)) return;
+      const prefer = CAST[name].prefer;
+      const pool = ranked.filter((v) => prefer === "any" || genderOf(v) === prefer || genderOf(v) === "any");
+      const list = pool.length ? pool : ranked;
+      let best = list[0];
+      let bestN = 99;
+      list.forEach((v) => {
+        const n = voiceUses.get(v.voiceURI || v.name) || 0;
+        if (n < bestN) { best = v; bestN = n; }
+      });
+      if (best) takeVoice(name, best);
+    });
+  }
+
+  function shapeForSpeech(text, cast) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function breakLine(text, cast) {
+    const bits = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+    const phrases = [];
+    bits.forEach((raw) => {
+      const sentence = raw.trim();
+      if (!/[a-z0-9]/i.test(sentence)) return;
+      const role = /\?\s*$/.test(sentence) ? "ask" : /!\s*$/.test(sentence) ? "force" : "say";
+      const words = sentence.split(/\s+/).length;
+      let parts = [sentence];
+      const breatheAt = cast.style === "nervous" || cast.style === "weak" || cast.style === "child" ? 8 : 12;
+      if (cast.breath === "open" && words > breatheAt && sentence.indexOf(",") !== -1) {
+        parts = sentence.split(/,\s+/).map((p) => p.trim()).filter((p) => /[a-z0-9]/i.test(p));
+      }
+      parts.forEach((part, i) => {
+        const last = i === parts.length - 1;
+        let spoken = part;
+        if (!last && !/[,.!?]$/.test(spoken)) spoken += ",";
+        phrases.push({
+          text: spoken,
+          role: last ? role : "say",
+          place: parts.length === 1 ? "fall" : (i === 0 ? "open" : (last ? "fall" : "mid")),
+        });
+      });
+    });
+    if (!phrases.length) phrases.push({ text: text, role: "say", place: "fall" });
+    for (let i = 1; i < phrases.length; i++) {
+      const prev = phrases[i - 1].text;
+      const sentenceBreak = /[.!?]["']?$/.test(prev);
+      phrases[i].wait = sentenceBreak ? cast.gap : Math.max(70, Math.round(cast.gap * 0.45));
+    }
+    phrases[0].wait = 0;
+    return phrases;
+  }
+
+  function prosody(cast, phrase, line) {
+    let pitch = cast.pitch;
+    let rate = cast.rate;
+    const lift = cast.contour || 0.04;
+    if (phrase.role === "ask") {
+      pitch += lift * 1.35;
+      rate *= 0.97;
+    } else if (phrase.role === "force") {
+      pitch += lift * 0.45;
+      rate *= cast.style === "young" ? 1.05 : 1.03;
+    } else if (phrase.place === "open") {
+      pitch += lift * 0.35;
+      if (cast.style === "story" || cast.style === "older" || cast.style === "careful" || cast.style === "weak") rate *= 0.97;
+    } else if (phrase.place === "mid") {
+      pitch += lift * 0.15;
+    } else {
+      pitch -= lift * 0.7;
+    }
+    if (cast.style === "nervous" && phrase.place === "open") rate *= 1.04;
+    if (phrase.role === "say" && phrase.text.split(/\s+/).length <= 2) rate *= 0.94;
+    let h = 0;
+    const sample = (line || "") + phrase.text;
+    for (let i = 0; i < sample.length; i++) h = (h * 33 + sample.charCodeAt(i)) >>> 0;
+    if (cast.style !== "flat") pitch += ((h % 5) - 2) * 0.008;
+    return {
+      pitch: clamp(pitch, 0.78, 1.22),
+      rate: clamp(rate, 0.78, 1.15),
+    };
   }
 
   const AudioBus = {
@@ -311,6 +463,8 @@
       this.queue = [];
       this.busy = false;
       this.speaking = "";
+      clearTimeout(this.speakTimer);
+      this.speakTimer = 0;
       if (window.speechSynthesis) window.speechSynthesis.cancel();
     },
 
@@ -320,18 +474,40 @@
       if (!clean || this.muted || !window.speechSynthesis) return;
       this.lineText = clean;
       const castName = CAST[who] ? who : (who ? "Alex" : "Narrator");
-      const interrupt = opts.replace !== false && (this.busy || this.queue.length);
+      const cast = CAST[castName];
+      assignVoices();
+      const shaped = shapeForSpeech(clean, cast);
+      const phrases = breakLine(shaped, cast);
+      const followOn = opts.replace === false && (this.busy || this.queue.length || this.speakTimer);
+      if (followOn && phrases[0]) phrases[0].wait = Math.max(phrases[0].wait || 0, Math.max(80, cast.gap || 80));
+      const interrupt = opts.replace !== false && (this.busy || this.queue.length || this.speakTimer);
       if (opts.replace !== false) {
         this.token += 1;
         this.queue = [];
         this.busy = false;
+        clearTimeout(this.speakTimer);
+        this.speakTimer = 0;
       } else if (!this.token) this.token = 1;
       const token = this.token;
-      this.queue.push({ text: clean, who: castName, token, done: false });
+      phrases.forEach((phrase) => {
+        const tune = prosody(cast, phrase, clean);
+        this.queue.push({
+          text: phrase.text,
+          who: castName,
+          token: token,
+          done: false,
+          pitch: tune.pitch,
+          rate: tune.rate,
+          volume: cast.volume,
+          wait: phrase.wait || 0,
+        });
+      });
       if (interrupt) {
         window.speechSynthesis.cancel();
-        clearTimeout(this.speakTimer);
-        this.speakTimer = setTimeout(() => { if (token === this.token) this.pumpSpeak(); }, 40);
+        this.speakTimer = setTimeout(() => {
+          this.speakTimer = 0;
+          if (token === this.token) this.pumpSpeak();
+        }, 60);
       } else this.pumpSpeak();
     },
 
@@ -347,14 +523,27 @@
         this.pumpSpeak();
         return;
       }
+      if (item.wait && !item.ready) {
+        if (item.armed) return;
+        item.armed = true;
+        this.speakTimer = setTimeout(() => {
+          this.speakTimer = 0;
+          if (item.token !== this.token) return;
+          item.ready = true;
+          this.pumpSpeak();
+        }, item.wait);
+        return;
+      }
       const cast = CAST[item.who] || CAST.Narrator;
       const u = new SpeechSynthesisUtterance(item.text);
-      u.pitch = cast.pitch;
-      u.rate = cast.rate;
-      u.volume = 1;
-      u.lang = "en-US";
-      const voice = pickVoice(cast);
-      if (voice) u.voice = voice;
+      u.pitch = item.pitch || cast.pitch;
+      u.rate = item.rate || cast.rate;
+      u.volume = item.volume == null ? 1 : item.volume;
+      const voice = voiceByWho.get(item.who) || null;
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang || "en-US";
+      } else u.lang = "en-US";
       this.busy = true;
       this.speaking = item.who;
       const finish = () => {
@@ -464,6 +653,15 @@
   root.AudioBus = AudioBus;
   if (window.speechSynthesis) {
     window.speechSynthesis.getVoices();
-    window.speechSynthesis.addEventListener("voiceschanged", () => window.speechSynthesis.getVoices());
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      voiceSig = "";
+      voiceByWho.clear();
+      voiceUses.clear();
+      assignVoices();
+    });
+    setInterval(() => {
+      const synth = window.speechSynthesis;
+      if (synth && synth.speaking && synth.paused) synth.resume();
+    }, 5000);
   }
 })(window);

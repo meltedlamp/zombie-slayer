@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Zombie Slayer</title>
-  <link rel="stylesheet" href="css/game.css" />
+  <link rel="stylesheet" href="css/game.css?v=road" />
 </head>
 <body>
   <div id="app">
@@ -36,9 +36,10 @@
       <div class="row">
         <button class="btn" id="btn-new" type="button">Begin</button>
         <button class="btn hidden" id="btn-continue" type="button">Continue</button>
+        <button class="btn" id="btn-lore" type="button">People</button>
         <button class="btn ghost" id="btn-sound" type="button">Sound on</button>
       </div>
-      <p class="fine" style="margin-top:22px">WASD move · arrows or mouse turn · 1 pipe · 2 knife · 3 sword, once you find it · click cuts · right mouse blocks · space dodges · E approaches · J journal · Esc pauses</p>
+      <p class="fine" style="margin-top:22px">WASD move · arrows or mouse turn · 1 pipe · 2 knife · 3 sword, once you find it · click cuts · right mouse blocks · space dodges · E approaches · J journal · C choices · Esc pauses</p>
     </section>
 
     <div id="confirm" class="hidden">
@@ -88,6 +89,8 @@
       <div class="row">
         <button class="btn" id="btn-resume" type="button">Resume</button>
         <button class="btn" id="btn-journal" type="button">Journal</button>
+        <button class="btn" id="btn-choices" type="button">Choices</button>
+        <button class="btn" id="btn-pause-lore" type="button">People</button>
         <button class="btn ghost" id="btn-quit" type="button">Title</button>
       </div>
     </div>
@@ -102,25 +105,59 @@
       </div>
     </div>
 
+    <div id="lore" class="hidden">
+      <header class="lore-head">
+        <div>
+          <p class="eyebrow">Millford</p>
+          <h2>People</h2>
+          <p class="lede">Who you can still meet, and what has started using their voices.</p>
+        </div>
+        <button class="btn" id="btn-close-lore" type="button">Back</button>
+      </header>
+      <div id="lore-layout">
+        <nav id="lore-list" aria-label="People"></nav>
+        <article id="lore-read"></article>
+      </div>
+      <p class="fine lore-foot">Arrows move through the names. Esc goes back.</p>
+    </div>
+
     <div id="journal" class="hidden">
       <p class="eyebrow">What you carry</p>
       <h2>Journal</h2>
       <div id="rel"></div>
       <ul id="log"></ul>
-      <button class="btn" id="btn-close-journal" type="button">Close</button>
+      <div class="row">
+        <button class="btn" id="btn-close-journal" type="button">Close</button>
+        <button class="btn ghost" id="btn-journal-path" type="button">Choices</button>
+      </div>
+    </div>
+
+    <div id="path" class="hidden">
+      <p class="eyebrow">The road</p>
+      <h2>Every choice</h2>
+      <p class="fine" id="path-lead"></p>
+      <div id="path-list"></div>
+      <p id="path-seal" class="hidden"></p>
+      <button class="btn" id="btn-close-path" type="button">Close</button>
     </div>
 
     <div id="end" class="hidden">
       <p class="eyebrow" id="end-kicker">Millford</p>
       <h1 id="end-title"></h1>
+      <p id="end-seal" class="hidden"></p>
+      <p id="end-road" class="hidden"></p>
       <div id="endps"></div>
-      <button class="btn" id="btn-end" type="button">Back to the dark</button>
+      <div class="row">
+        <button class="btn" id="btn-end-path" type="button">Every choice</button>
+        <button class="btn ghost" id="btn-end" type="button">Back to the dark</button>
+      </div>
     </div>
   </div>
   <script src="vendor/three.min.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/world.js"></script>
   <script src="js/story.js"></script>
+  <script src="js/people.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/main.js"></script>
 </body>
