@@ -1,26 +1,30 @@
 (function (root) {
   const ARENAS = {
-    dojo: { layout: "dojo", fog: 0x10080c, density: 0.048, hemiSky: 0x4a4048, hemiGround: 0x1a1010, moon: 0x9aabb8, moonI: 0.85, bounds: { x: 16, z: 16 } },
-    gas: { layout: "gas", fog: 0x0c100e, density: 0.05, hemiSky: 0x3a4840, hemiGround: 0x141210, moon: 0x8e9a96, moonI: 0.72, bounds: { x: 17, z: 17 } },
-    overpass: { layout: "overpass", fog: 0x0a0e14, density: 0.052, hemiSky: 0x303848, hemiGround: 0x12100e, moon: 0x7a8a9a, moonI: 0.7, bounds: { x: 15, z: 16 } },
-    truck: { layout: "truck", fog: 0x14110c, density: 0.044, hemiSky: 0x524838, hemiGround: 0x1c1610, moon: 0xb4a890, moonI: 0.9, bounds: { x: 18, z: 18 } },
-    school: { layout: "school", fog: 0x121210, density: 0.048, hemiSky: 0x44423c, hemiGround: 0x181410, moon: 0xa09c90, moonI: 0.78, bounds: { x: 17, z: 17 } },
-    farm: { layout: "farm", fog: 0x16140e, density: 0.04, hemiSky: 0x524832, hemiGround: 0x1c1610, moon: 0xc4b088, moonI: 0.95, bounds: { x: 18, z: 18 } },
-    farmNight: { layout: "farm", fog: 0x080c14, density: 0.062, hemiSky: 0x243040, hemiGround: 0x100e0c, moon: 0x7a8aa0, moonI: 0.55, rain: true, bounds: { x: 18, z: 18 } },
-    roadblock: { layout: "roadblock", fog: 0x12100a, density: 0.05, hemiSky: 0x403820, hemiGround: 0x18140e, moon: 0xa09878, moonI: 0.74, bounds: { x: 15, z: 16 } },
-    bridge: { layout: "bridge", fog: 0x0a1014, density: 0.04, hemiSky: 0x283038, hemiGround: 0x101410, moon: 0x8a98a6, moonI: 0.72, bounds: { x: 2.35, z: 20 }, camDist: 5.2 },
+    dojo: { layout: "dojo", fog: 0x221820, density: 0.03, hemiSky: 0x6e6670, hemiGround: 0x2a201c, moon: 0xb4c0cc, moonI: 0.9, bounds: { x: 16, z: 16 } },
+    gas: { layout: "gas", fog: 0x1a221e, density: 0.032, hemiSky: 0x5c6c64, hemiGround: 0x24201c, moon: 0xa8b4b0, moonI: 0.8, bounds: { x: 17, z: 17 } },
+    overpass: { layout: "overpass", fog: 0x182028, density: 0.032, hemiSky: 0x546070, hemiGround: 0x221e1c, moon: 0x9aacbc, moonI: 0.78, bounds: { x: 15, z: 16 } },
+    truck: { layout: "truck", fog: 0x282018, density: 0.028, hemiSky: 0x746858, hemiGround: 0x2c241c, moon: 0xc8bca4, moonI: 0.95, bounds: { x: 18, z: 18 } },
+    school: { layout: "school", fog: 0x222220, density: 0.03, hemiSky: 0x66645e, hemiGround: 0x28241e, moon: 0xb8b4a8, moonI: 0.84, bounds: { x: 17, z: 17 } },
+    farm: { layout: "farm", fog: 0x2a261c, density: 0.026, hemiSky: 0x746848, hemiGround: 0x2c261c, moon: 0xd4c4a0, moonI: 1, bounds: { x: 18, z: 18 } },
+    cut: { layout: "cut", fog: 0x1a221c, density: 0.034, hemiSky: 0x4a5850, hemiGround: 0x1e221c, moon: 0x9aa898, moonI: 0.7, bounds: { x: 16, z: 18 } },
+    treeline: { layout: "treeline", fog: 0x121820, density: 0.042, hemiSky: 0x344454, hemiGround: 0x161614, moon: 0x8a9aaa, moonI: 0.55, rain: true, bounds: { x: 18, z: 18 } },
+    well: { layout: "well", fog: 0x3a3428, density: 0.02, hemiSky: 0xc4b090, hemiGround: 0x3a3424, moon: 0xf0d8b0, moonI: 1.15, bounds: { x: 16, z: 16 } },
+    roadblock: { layout: "roadblock", fog: 0x262216, density: 0.03, hemiSky: 0x645838, hemiGround: 0x28241c, moon: 0xb8b090, moonI: 0.8, bounds: { x: 15, z: 16 } },
+    bridge: { layout: "bridge", fog: 0x162028, density: 0.028, hemiSky: 0x445058, hemiGround: 0x1c221e, moon: 0xa4b2be, moonI: 0.8, bounds: { x: 2.35, z: 20 }, camDist: 5.2 },
   };
 
   const TINT = {
-    dojo: 0x6a5848,
-    gas: 0x5c5850,
-    overpass: 0x4e545c,
-    truck: 0x6a5c48,
-    school: 0x5e5a52,
-    farm: 0x5a5640,
-    farmNight: 0x3a3830,
-    roadblock: 0x5a523c,
-    bridge: 0x464a44,
+    dojo: 0xc8b8a6,
+    gas: 0xb8b6ae,
+    overpass: 0xa8b0b8,
+    truck: 0xc8b89e,
+    school: 0xb8b6ae,
+    farm: 0xc4b898,
+    cut: 0x9aa498,
+    treeline: 0x7e8a78,
+    well: 0xd4c8ae,
+    roadblock: 0xc4b89a,
+    bridge: 0xa8b2ac,
   };
 
   let groundTex = null;
@@ -32,7 +36,7 @@
     c.width = size;
     c.height = size;
     const g = c.getContext("2d");
-    g.fillStyle = "#2a241e";
+    g.fillStyle = "#6a5e52";
     g.fillRect(0, 0, size, size);
     for (let i = 0; i < 28000; i++) {
       const v = Math.random();
@@ -59,8 +63,8 @@
       const y = Math.random() * size;
       const rad = 18 + Math.random() * 70;
       const stain = g.createRadialGradient(x, y, 2, x, y, rad);
-      stain.addColorStop(0, "rgba(70,8,8,0.72)");
-      stain.addColorStop(0.45, "rgba(40,6,6,0.38)");
+      stain.addColorStop(0, "rgba(110,16,16,0.5)");
+      stain.addColorStop(0.45, "rgba(60,10,10,0.26)");
       stain.addColorStop(1, "rgba(20,4,4,0)");
       g.fillStyle = stain;
       g.beginPath();
@@ -159,7 +163,6 @@
 
   function build(group, arenaId) {
     const arena = ARENAS[arenaId] || ARENAS.dojo;
-    const night = arenaId === "farmNight";
     const solids = [];
     const markers = {};
     let points = [];
@@ -641,6 +644,35 @@
       }
     }
 
+    function tippedBus(x, z) {
+      const g = new THREE.Group();
+      g.position.set(x, 0, z);
+      const paint = mat(0xc4a83a);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.35, 2.15, 8.4), paint);
+      body.position.y = 1.1;
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.16, 8.42), mat(0x1a1a1a));
+      stripe.position.y = 1.72;
+      g.add(body, stripe);
+      for (let i = 0; i < 6; i++) {
+        const broken = i === 2 || i === 4;
+        const pane = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.42), glassMat(broken ? 0.22 : 0.5));
+        pane.rotation.x = -Math.PI / 2;
+        pane.position.set(0.1, 2.2, -2.7 + i * 1.08);
+        g.add(pane);
+      }
+      [-2.5, -0.4, 1.8].forEach((zOff) => {
+        const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.2, 8), mat(0x151515));
+        w.rotation.z = Math.PI / 2;
+        w.position.set(-1.28, 0.42, zOff);
+        g.add(w);
+      });
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.5, 0.9), mat(0x2a241c));
+      door.position.set(1.22, 1.15, 2.4);
+      door.rotation.y = 0.7;
+      g.add(door);
+      return adopt(g, { minx: x - 1.45, maxx: x + 1.45, minz: z - 4.4, maxz: z + 4.4 });
+    }
+
     function lineRun(x, z, len, axis) {
       const n = Math.max(2, Math.floor(len / 1.5));
       for (let i = 0; i < n; i++) {
@@ -652,8 +684,8 @@
     const layouts = {
       dojo() {
         start = { x: 0, z: 9, yaw: 0 };
-        points = [[-3, -6], [2.5, -5], [5, -3], [-5, -2], [1, -7.2], [-2, 1], [4, 2]];
-        people = [{ id: "harris", name: "Harris", x: 5.4, z: 4.2, color: 0x3d4c5c }];
+        points = [[-8, -8], [6, -6], [-4, -2], [9, -1], [-10, 3], [3, 4], [7, 6], [-6, 7], [1, -10], [-12, -4], [11, 2], [0, 8]];
+        people = [{ id: "harris", name: "Dean", x: 5.4, z: 4.2, color: 0x3d4c5c }];
         patch(0, 2, 22, 26, 0x4a453c, 0.02);
         patch(0, -4, 14, 10, 0x6a5344, 0.03);
         patch(0, -1.5, 7.2, 8.8, 0x3a2e26, 0.035);
@@ -702,12 +734,12 @@
       },
       gas() {
         start = { x: 0, z: 11, yaw: 0 };
-        points = [[-6, 4], [6, 2], [-4, -4], [3, 6], [-8, 1], [7, -5], [1, -6]];
+        points = [[-10, 6], [8, 4], [-6, -6], [5, 8], [-12, 1], [11, -6], [1, -9], [-3, 10], [13, 2], [-8, -9], [4, -2], [-14, 8]];
         people = [
-          { id: "ellis", name: "Ellis", x: 0.6, z: 2.4, color: 0x24383a },
-          { id: "harris", name: "Harris", x: 7.2, z: 6.5, color: 0x3d4c5c },
+          { id: "ellis", name: "Rico", x: 0.6, z: 2.4, color: 0x24383a },
+          { id: "harris", name: "Dean", x: 7.2, z: 6.5, color: 0x3d4c5c },
         ];
-        markers.ellis = { x: 0.6, z: 2.4, label: "Ellis" };
+        markers.ellis = { x: 0.6, z: 2.4, label: "Rico" };
         patch(0, 1, 24, 28, 0x2c2e30, 0.02);
         patch(0, 10, 8, 14, 0x3a3c38, 0.03);
         lineRun(0, -6, 18, "z");
@@ -758,8 +790,8 @@
       },
       overpass() {
         start = { x: 0, z: 9, yaw: 0 };
-        points = [[-2, 2], [3, -1], [-3, -4], [1.5, 4], [4, 1], [-1, -7]];
-        people = [{ id: "harris", name: "Harris", x: -2.4, z: 1.2, color: 0x3d4c5c }];
+        points = [[-7, 12], [6, 10], [-4, 5], [9, 3], [-10, -1], [5, -4], [-6, -8], [8, -10], [-1, -13], [11, -12], [-12, 7], [3, 14]];
+        people = [{ id: "harris", name: "Dean", x: -2.4, z: 1.2, color: 0x3d4c5c }];
         patch(0, 0, 28, 34, 0x23262a, 0.02);
         patch(0, 0, 7.2, 30, 0x2a2c30, 0.03);
         lineRun(0, -12, 26, "z");
@@ -796,8 +828,8 @@
         start = { x: -1.5, z: 8.5, yaw: -0.42 };
         points = [[7, 4], [-8, -2], [3, 6], [8, -5], [-4, -7], [11, 1], [-11, 5]];
         people = [
-          { id: "nedra", name: "Nedra", x: 3.3, z: 0.2, color: 0x5c3a32 },
-          { id: "cal", name: "Cal", x: 5.2, z: 2.2, color: 0x222428 },
+          { id: "nedra", name: "Nora", x: 3.3, z: 0.2, color: 0x5c3a32 },
+          { id: "cal", name: "Sam", x: 5.2, z: 2.2, color: 0x222428 },
         ];
         patch(2, 0, 14, 16, 0x5a4c38, 0.02);
         patch(1.5, -1, 4, 9, 0x3a3428, 0.03);
@@ -837,7 +869,7 @@
       },
       school() {
         start = { x: 0, z: 11, yaw: 0 };
-        points = [[-5, 3], [4, 1], [-2, -1], [6, 4], [-6, 6], [1, 5], [3, -2]];
+        points = [[-9, 9], [8, 8], [-4, 2], [6, -1], [-11, -1], [11, 3], [1, 5], [-7, 12], [8, 12], [3, -4], [-13, 5], [13, -3]];
         markers.door = { x: 0, z: -6.4, label: "the doors" };
         patch(0, 2, 28, 30, 0x6a675e, 0.02);
         patch(0, 3, 12, 14, 0x3a4a38, 0.028);
@@ -897,9 +929,9 @@
         start = { x: 0, z: 12, yaw: 0 };
         points = [[-4, 14], [1, 15], [5, 13], [-6, 12], [6, 16], [2, 11], [-2, 16], [7, 10]];
         people = [
-          { id: "owen", name: "Owen", x: -1.4, z: 7.2, color: 0x4a453c },
-          { id: "ruth", name: "Ruth", x: -6.2, z: 0.4, color: 0x3a3438 },
-          { id: "pete", name: "Pete", x: 4.2, z: 4.2, color: 0x3e342c },
+          { id: "owen", name: "Dale", x: -1.4, z: 7.2, color: 0x4a453c },
+          { id: "ruth", name: "Helen", x: -6.2, z: 0.4, color: 0x3a3438 },
+          { id: "pete", name: "Ray", x: 4.2, z: 4.2, color: 0x3e342c },
         ];
         markers.gate = { x: 0, z: 7.4, label: "the gate" };
         patch(0, 2, 36, 36, 0x3d4a32, 0.015);
@@ -911,14 +943,14 @@
         box(-7.2, 1.25, -2.15, 1.1, 2.2, 0.12, 0x2a201c, false);
         windowRow(-9.2, 2.5, -2.28, 2, 1.5, []);
         windowRow(-5.2, 2.6, -2.28, 1, 1.4, []);
-        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.9), glowMat(0xf0c890, night ? 1.3 : 0.55));
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.9), glowMat(0xf0c890, 0.55));
         win.position.set(-8.6, 2.5, -2.2);
         add(win);
-        const win2 = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.9), glowMat(0xf0c890, night ? 1.3 : 0.55));
+        const win2 = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.9), glowMat(0xf0c890, 0.55));
         win2.position.set(-5.6, 2.6, -2.2);
         add(win2);
-        practical(-7.2, 2.4, -1.2, 0xf0c090, night ? 8 : 3.5, night ? 12 : 8);
-        lamp(-4.4, -1.6, 0xf0d0a0, night ? 4 : 1.5);
+        practical(-7.2, 2.4, -1.2, 0xf0c090, 3.5, 8);
+        lamp(-4.4, -1.6, 0xf0d0a0, 1.5);
         bench(-5.2, -1.3, 0.15);
         const rocker = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), mat(0x4a382c));
         rocker.position.set(-9.2, 0.45, -1.5);
@@ -970,11 +1002,6 @@
         grass(-2, 4, 1);
         grass(3, 8, 0.8);
         grass(-8, 6, 1);
-        if (night) {
-          stain(-2, 5, 1.1, 0x1a2428);
-          stain(4, 9, 0.8, 0x1a2428);
-          stain(1, 2, 0.6, 0x1a2428);
-        }
         rock(-11, 5, 1.1);
         const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.06, 8), mat(0x8a3030));
         bowl.position.set(-6.4, 0.08, -1.2);
@@ -982,9 +1009,9 @@
       },
       roadblock() {
         start = { x: 0, z: 9, yaw: 0 };
-        points = [[-3, 1], [3, 0], [0, -3], [-5, 3], [5, 2], [-1, 4]];
-        people = [{ id: "voss", name: "Voss", x: 0.4, z: -1.4, color: 0x3f2e28 }];
-        markers.voss = { x: 0.4, z: -1.4, label: "Voss" };
+        points = [[-9, 7], [8, 6], [-7, -6], [8, -5], [0, 8], [-11, 1], [11, 2], [-2, -9], [5, 10], [-5, 11]];
+        people = [{ id: "voss", name: "Kane", x: 0.4, z: -1.4, color: 0x3f2e28 }];
+        markers.voss = { x: 0.4, z: -1.4, label: "Kane" };
         patch(0, 0, 16, 30, 0x2e2c28, 0.02);
         patch(0, 2, 5.5, 22, 0x3a3428, 0.03);
         lineRun(0, -8, 20, "z");
@@ -1013,9 +1040,149 @@
         grass(8, 8, 1);
         grass(-8, -8, 0.9);
       },
+      cut() {
+        start = { x: 3.2, z: 11, yaw: 0 };
+        points = [[3.4, 3], [5, -2], [2.2, -7], [6, 5], [1.4, 6], [4.2, -5], [6.5, 0], [2.6, -9]];
+        patch(3.2, 0, 8.5, 32, 0x2a2c28, 0.02);
+        patch(-6.2, 0, 8, 30, 0x1a2824, 0.03);
+        patch(-6.2, -1, 5.2, 24, 0x163038, 0.045);
+        lineRun(3.2, -12, 26, "z");
+        const water = new THREE.Mesh(
+          new THREE.PlaneGeometry(5.4, 26),
+          new THREE.MeshLambertMaterial({ color: 0x1a3034, transparent: true, opacity: 0.82 })
+        );
+        water.rotation.x = -Math.PI / 2;
+        water.position.set(-6.2, 0.05, -1);
+        water.userData.skipBake = true;
+        group.add(water);
+        tippedBus(-2.6, -1.2);
+        tag(-1.15, 1.85, 1.4, "SCHOOL", 1.1, -Math.PI / 2);
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.58, 4.4, 8), mat(0x3a4044));
+        pipe.rotation.z = Math.PI / 2;
+        pipe.position.set(-5.6, 0.42, 5.2);
+        add(pipe);
+        box(-5.6, 0.35, 5.2, 4.2, 0.7, 1.2, 0x3a4044, true);
+        car(-7.4, -6.5, 0.4, 0x5a3030, { hood: true });
+        [-8, -4, 0, 4, 8].forEach((z) => {
+          box(0.2, 0.38, z, 0.12, 0.7, 0.12, 0x6a6458, false);
+        });
+        box(0.2, 0.62, 0, 0.08, 0.08, 16, 0x8a8478, false);
+        stain(-4.2, -2.4, 1.1, 0x1a1814);
+        stain(-6.8, 2.2, 0.8, 0x142022);
+        stain(4.2, 4, 0.7, 0x1c1a16);
+        crate(5.8, 0.25, 7.2, 0.9);
+        box(6.2, 0.12, -8.4, 0.9, 0.08, 0.35, 0x4a3828, false);
+        deadTree(-12, 8, 1.3);
+        deadTree(-11, -9, 1.15);
+        tree(12, -6, 1.1);
+        deadTree(11, 9, 0.95);
+        rock(-10, 2, 1.2);
+        rock(8, -10, 1);
+        grass(-4.2, 7, 1);
+        grass(-8.5, -2, 0.9);
+        grass(-3.5, -8, 1.1);
+        grass(7.5, 8, 0.8);
+      },
+      treeline() {
+        start = { x: 0, z: 9, yaw: 0 };
+        points = [[-3, 2], [4, 1], [0, -3], [6, -5], [-6, -1], [2, -7], [-4, 5], [5, 4], [-1, -6]];
+        people = [
+          { id: "owen", name: "Dale", x: -3.4, z: 6.2, color: 0x4a453c, face: Math.PI },
+          { id: "pete", name: "Ray", x: 4.6, z: 5.4, color: 0x3e342c, face: Math.PI },
+        ];
+        patch(0, 0, 36, 36, 0x243028, 0.015);
+        patch(0, -2, 16, 14, 0x1c2820, 0.03);
+        fenceRun(-14, 12, -1.6, 12);
+        fenceRun(1.6, 12, 14, 12);
+        box(-1.7, 1.05, 12, 0.16, 1.7, 0.16, 0x3a342c, false);
+        box(1.7, 1.05, 12, 0.16, 1.7, 0.16, 0x3a342c, false);
+        corn(-3.2, -7.2, 8, 5);
+        box(-7.4, 1.15, -1.2, 0.22, 2.3, 3.4, 0x4a3c32, true);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.12, 3.6), mat(0x3a3028));
+        roof.position.set(-5.2, 0.85, -1.1);
+        roof.rotation.z = 0.62;
+        roof.rotation.y = 0.15;
+        add(roof);
+        box(-4.6, 0.2, -2.4, 1.6, 0.28, 0.35, 0x5a4638, false);
+        box(-6.2, 0.35, 0.4, 0.9, 0.55, 0.2, 0x3a342c, false);
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.4, 5), mat(0x3a342c));
+        post.position.set(-4.2, 0.7, 0.8);
+        post.rotation.z = 0.9;
+        add(post);
+        for (let i = 0; i < 7; i++) deadTree(-12 + i * 4, -11.5, 1.05 + (i % 3) * 0.15);
+        tree(-13, 4, 1.2);
+        tree(13, -2, 1.15);
+        deadTree(12, 6, 1.25);
+        stain(-1, 3, 1.2, 0x141c20);
+        stain(3, -2, 0.8, 0x141c20);
+        stain(-6, 2, 0.7, 0x121820);
+        rock(-9, 7, 1.2);
+        rock(8, 8, 0.9);
+        grass(6, 7, 1);
+        grass(-8, 8, 0.85);
+        lamp(-5.5, 7.2, 0xc8b898, 2);
+      },
+      well() {
+        start = { x: 0.4, z: 8, yaw: 0 };
+        points = [[-2, 2], [3, 1], [0, -2]];
+        people = [
+          { id: "owen", name: "Dale", x: -2.4, z: -3.6, color: 0x4a453c, face: Math.PI },
+          { id: "ruth", name: "Helen", x: 1.6, z: -5.4, color: 0x3a3438, face: Math.PI },
+          { id: "pete", name: "Ray", x: 5.2, z: 1.6, color: 0x3e342c, face: Math.PI },
+        ];
+        patch(0, 1, 28, 28, 0x6a5c44, 0.02);
+        patch(0, -1, 10, 8, 0x5a4c38, 0.035);
+        box(0, 2.3, -9.2, 14, 4.4, 3.6, 0x5a463c, true);
+        box(0, 4.65, -9.2, 14.6, 0.35, 4.2, 0x3a2e28, true);
+        box(0.2, 1.25, -7.25, 1.15, 2.3, 0.14, 0x2a201c, false);
+        windowRow(-4.6, 2.6, -7.3, 2, 1.6, []);
+        const warm = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.95), glowMat(0xf0c890, 0.85));
+        warm.position.set(-4.6, 2.6, -7.22);
+        add(warm);
+        lamp(-1.5, -6.4, 0xf0d0a0, 5);
+        practical(-1.5, 2.8, -6.2, 0xf0c090, 6, 11);
+        const well = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.85, 8), mat(0x6a645c));
+        well.position.set(0.2, 0.42, 0.4);
+        add(well);
+        const mouth = new THREE.Mesh(new THREE.CircleGeometry(0.55, 10), decalMat(0x1a2428));
+        mouth.rotation.x = -Math.PI / 2;
+        mouth.position.set(0.2, 0.86, 0.4);
+        flat(mouth);
+        box(-0.55, 1.35, 0.4, 0.08, 1.7, 0.08, 0x3a342c, false);
+        box(0.95, 1.35, 0.4, 0.08, 1.7, 0.08, 0x3a342c, false);
+        box(0.2, 2.15, 0.4, 1.7, 0.08, 0.08, 0x3a342c, false);
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.08), mat(0x2a2420));
+        handle.position.set(1.15, 1.15, 0.7);
+        handle.rotation.z = 0.8;
+        add(handle);
+        jug(1.5, 1.5, 0x2a5270);
+        const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 0.22, 8), mat(0x3a342c));
+        bucket.position.set(-0.7, 0.12, 1.3);
+        add(bucket);
+        box(-5.4, 1.55, 2.2, 0.08, 2.4, 0.08, 0x3a342c, false);
+        box(-1.2, 1.55, 2.2, 0.08, 2.4, 0.08, 0x3a342c, false);
+        box(-3.3, 2.55, 2.2, 4.4, 0.04, 0.04, 0x6a6a6c, false);
+        const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.6), mat(0xd8d2c8));
+        sheet.position.set(-4.4, 2.05, 2.2);
+        add(sheet);
+        const sheet2 = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.7), mat(0x6a3030));
+        sheet2.position.set(-2.6, 2.0, 2.2);
+        add(sheet2);
+        bench(4.2, -2.4, -0.4);
+        box(5.6, 0.45, -4.2, 0.7, 0.7, 0.55, 0x3a4a58, false);
+        fenceRun(-12, 12, 12, 12);
+        fenceRun(-12, 12, -12, -4);
+        fenceRun(12, 12, 12, -4);
+        deadTree(-13, 8, 1.15);
+        tree(13, 9, 1.05);
+        tree(-12, -8, 0.95);
+        grass(3, 4, 1);
+        grass(-6, 3, 0.85);
+        rock(8, 5, 0.8);
+      },
       bridge() {
         start = { x: 0, z: 14, yaw: 0 };
-        points = [[0, 8], [-0.5, 3], [0.6, -1], [0, -6], [-0.4, -10], [0.4, -14], [0, 11], [-0.3, -3]];
+        points = [[-1.05, 10], [0.95, 6], [-0.85, 2], [1.05, -2], [-1, -6], [0.9, -10], [-0.8, -14], [0.7, 13], [-1.1, -17], [1, -8], [-0.6, 16], [0.8, -16]];
         markers.span = { x: 0, z: -2, label: "the span" };
         const water = new THREE.Mesh(
           new THREE.PlaneGeometry(90, 90),

@@ -199,17 +199,18 @@
 
   const CAST = {
     Narrator: { pitch: 0.86, rate: 0.9, prefer: "female", slot: 0 },
-    Mara: { pitch: 1.0, rate: 0.98, prefer: "female", slot: 1 },
-    June: { pitch: 1.28, rate: 1.06, prefer: "female", slot: 0 },
-    Harris: { pitch: 1.06, rate: 1.02, prefer: "male", slot: 0 },
-    Ellis: { pitch: 0.68, rate: 0.86, prefer: "male", slot: 1 },
-    Nedra: { pitch: 0.98, rate: 0.9, prefer: "female", slot: 1 },
-    Ian: { pitch: 0.84, rate: 0.74, prefer: "male", slot: 0 },
-    Cal: { pitch: 0.74, rate: 0.82, prefer: "male", slot: 1 },
-    Owen: { pitch: 0.62, rate: 0.86, prefer: "male", slot: 0 },
-    Ruth: { pitch: 1.16, rate: 0.76, prefer: "female", slot: 1 },
-    Pete: { pitch: 0.8, rate: 0.98, prefer: "male", slot: 1 },
-    Voss: { pitch: 0.54, rate: 0.78, prefer: "male", slot: 0 },
+    Alex: { pitch: 1.0, rate: 0.98, prefer: "female", slot: 1 },
+    Mia: { pitch: 1.28, rate: 1.06, prefer: "female", slot: 0 },
+    Dean: { pitch: 1.06, rate: 1.02, prefer: "male", slot: 0 },
+    Rico: { pitch: 0.68, rate: 0.86, prefer: "male", slot: 1 },
+    Nora: { pitch: 0.98, rate: 0.9, prefer: "female", slot: 1 },
+    Ben: { pitch: 0.84, rate: 0.74, prefer: "male", slot: 0 },
+    Sam: { pitch: 0.74, rate: 0.82, prefer: "male", slot: 1 },
+    Dale: { pitch: 0.62, rate: 0.86, prefer: "male", slot: 0 },
+    Helen: { pitch: 1.16, rate: 0.76, prefer: "female", slot: 1 },
+    Jonah: { pitch: 1.42, rate: 0.92, prefer: "male", slot: 0 },
+    Ray: { pitch: 0.8, rate: 0.98, prefer: "male", slot: 1 },
+    Kane: { pitch: 0.54, rate: 0.78, prefer: "male", slot: 0 },
   };
 
   function pickVoice(cast) {
@@ -318,7 +319,7 @@
       const clean = String(text || "").replace(/\s+/g, " ").trim();
       if (!clean || this.muted || !window.speechSynthesis) return;
       this.lineText = clean;
-      const castName = CAST[who] ? who : (who ? "Mara" : "Narrator");
+      const castName = CAST[who] ? who : (who ? "Alex" : "Narrator");
       const interrupt = opts.replace !== false && (this.busy || this.queue.length);
       if (opts.replace !== false) {
         this.token += 1;

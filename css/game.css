@@ -30,12 +30,10 @@ canvas { display: block; width: 100%; height: 100%; }
 }
 
 #grain {
-  opacity: 0.16;
+  opacity: 0.07;
   background-image:
-    radial-gradient(rgba(0, 0, 0, 0.55) 0.7px, transparent 0.75px),
-    radial-gradient(rgba(40, 0, 0, 0.28) 0.5px, transparent 0.6px);
-  background-size: 3px 3px, 5px 5px;
-  background-position: 0 0, 1px 2px;
+    radial-gradient(rgba(0, 0, 0, 0.4) 0.6px, transparent 0.7px);
+  background-size: 3px 3px;
 }
 
 @keyframes grainShift {
@@ -44,48 +42,147 @@ canvas { display: block; width: 100%; height: 100%; }
 }
 
 #vignette {
-  background: radial-gradient(ellipse at center, transparent 28%, rgba(0, 0, 0, 0.82) 100%);
-  transition: background 0.25s linear;
+  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.38) 100%);
+  transition: background 0.2s linear;
 }
 
 #vignette.hurt {
-  background: radial-gradient(ellipse at center, rgba(90, 0, 0, 0.28) 0%, rgba(70, 0, 0, 0.72) 100%);
+  background: radial-gradient(ellipse at center, rgba(150, 16, 16, 0.14) 0%, rgba(70, 0, 0, 0.2) 100%);
 }
 
-#vignette.low {
-  box-shadow: inset 0 0 140px rgba(90, 8, 8, 0.62);
+#vignette.sting {
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.48) 100%);
 }
 
-#bleed {
+#vignette.acid {
+  background: radial-gradient(ellipse at center, rgba(90, 110, 16, 0.28) 0%, rgba(40, 52, 0, 0.62) 100%);
+}
+
+#app.limping #vignette {
+  box-shadow: inset 0 -90px 80px rgba(70, 8, 8, 0.55);
+}
+
+#app.locked #vignette {
+  background: radial-gradient(ellipse at center, transparent 16%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+#bleed { opacity: 0; }
+
+#blood-rim, #lowlife, #splats {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#blood-rim {
   opacity: 0;
+  --hit: 1;
   background:
-    radial-gradient(ellipse at center, transparent 42%, rgba(80, 0, 0, 0.62) 100%),
-    radial-gradient(circle at 12% 88%, rgba(110, 8, 8, 0.45), transparent 26%),
-    radial-gradient(circle at 86% 14%, rgba(80, 0, 0, 0.38), transparent 22%);
-  transition: opacity 0.12s linear;
+    linear-gradient(to right, rgba(120, 8, 10, 0.82), transparent 11%),
+    linear-gradient(to left, rgba(110, 6, 8, 0.78), transparent 11%),
+    linear-gradient(to top, rgba(100, 4, 8, 0.7), transparent 13%),
+    linear-gradient(to bottom, rgba(80, 0, 6, 0.45), transparent 9%),
+    radial-gradient(18% 22% at 0% 30%, rgba(160, 12, 14, 0.9), transparent 70%),
+    radial-gradient(16% 18% at 100% 68%, rgba(140, 8, 12, 0.85), transparent 72%),
+    radial-gradient(22% 14% at 30% 100%, rgba(130, 6, 10, 0.75), transparent 70%);
 }
 
-#bleed.on { opacity: 1; }
+#blood-rim.hit { animation: bloodRim 1.05s ease-out forwards; }
+
+@keyframes bloodRim {
+  0% { opacity: 0; }
+  9% { opacity: var(--hit); }
+  100% { opacity: 0; }
+}
+
+#lowlife { opacity: 0; transition: opacity 0.35s ease; }
+#app.low-hp #lowlife { opacity: 1; }
+
+#lowlife .edge {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(140, 10, 12, 0.55), transparent 13%),
+    linear-gradient(to left, rgba(130, 8, 10, 0.5), transparent 13%),
+    linear-gradient(to top, rgba(110, 6, 8, 0.42), transparent 18%),
+    linear-gradient(to bottom, rgba(90, 0, 6, 0.22), transparent 11%);
+  animation: lowPulse 1.2s ease-in-out infinite;
+}
+
+#app.low-crit #lowlife .edge { animation-duration: 0.52s; }
+
+@keyframes lowPulse {
+  0%, 100% { opacity: 0.28; }
+  16% { opacity: 1; }
+  30% { opacity: 0.34; }
+  44% { opacity: 0.82; }
+  68% { opacity: 0.26; }
+}
+
+#lowlife .drop {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 16px;
+  border-radius: 40% 40% 46% 46%;
+  background: radial-gradient(circle at 50% 28%, #e02424, #7a080c 72%);
+  animation: dripFall 2.05s cubic-bezier(0.45, 0.05, 0.75, 1) infinite;
+  box-shadow: 0 8px 10px rgba(60, 0, 0, 0.35);
+}
+
+#lowlife .drop::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: -14px;
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(#8a1012, transparent);
+}
+
+#lowlife .d1 { left: 11%; }
+#lowlife .d2 { left: 73%; animation-delay: 0.7s; height: 20px; }
+#lowlife .d3 { left: 41%; animation-delay: 1.25s; width: 6px; }
+#lowlife .d4, #lowlife .d5 { opacity: 0; }
+#app.low-crit #lowlife .d4,
+#app.low-crit #lowlife .d5 { opacity: 1; }
+#lowlife .d4 { left: 88%; animation-delay: 0.35s; animation-duration: 1.35s; }
+#lowlife .d5 { left: 24%; animation-delay: 0.9s; animation-duration: 1.5s; }
+
+@keyframes dripFall {
+  0% { transform: translateY(0) scaleY(1); opacity: 0; }
+  12% { opacity: 0.95; }
+  100% { transform: translateY(42vh) scaleY(1.35); opacity: 0; }
+}
+
+#lowlife .beat {
+  position: absolute;
+  right: 276px;
+  top: 20px;
+  width: 12px;
+  height: 12px;
+  background: #b41418;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  animation: heartBeat 1.2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(160, 10, 12, 0.65);
+}
+
+#app.low-crit #lowlife .beat { animation-duration: 0.52s; background: #e0181c; }
+
+@keyframes heartBeat {
+  0%, 100% { transform: rotate(-45deg) scale(0.75); opacity: 0.55; }
+  16% { transform: rotate(-45deg) scale(1.25); opacity: 1; }
+  30% { transform: rotate(-45deg) scale(0.8); opacity: 0.6; }
+  44% { transform: rotate(-45deg) scale(1.12); opacity: 0.95; }
+  62% { transform: rotate(-45deg) scale(0.75); opacity: 0.5; }
+}
 
 #app.dread-close #vignette {
-  background: radial-gradient(ellipse at center, transparent 18%, rgba(48, 0, 0, 0.78) 100%);
-  animation: throb 0.76s ease-in-out infinite;
-}
-
-#app.dread-close #bleed { opacity: 0.55; }
-
-#app.dread-low #vignette { animation: throb 0.58s ease-in-out infinite; }
-
-#app.dread-critical #vignette {
-  animation: throb 0.38s ease-in-out infinite;
-  background: radial-gradient(ellipse at center, transparent 10%, rgba(110, 0, 0, 0.84) 100%);
-}
-
-#app.dread-critical #bleed { opacity: 0.8; }
-
-@keyframes throb {
-  0%, 100% { opacity: 0.62; }
-  42% { opacity: 1; }
+  background: radial-gradient(ellipse at center, transparent 54%, rgba(28, 0, 0, 0.34) 100%);
 }
 
 .hidden { display: none !important; }
@@ -174,6 +271,7 @@ canvas { display: block; width: 100%; height: 100%; }
   left: 28px;
   top: 22px;
   right: 28px;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   gap: 24px;
@@ -189,10 +287,24 @@ canvas { display: block; width: 100%; height: 100%; }
   font-size: 12px;
 }
 
+#weapon {
+  margin-top: 6px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+#weapon.lit {
+  color: #d7fff6;
+  text-shadow: 0 0 12px rgba(160, 255, 230, 0.65);
+}
+
 #hint {
   position: absolute;
   top: 48px;
   left: 28px;
+  z-index: 5;
   max-width: 28rem;
   color: var(--dim);
   font-size: 15px;
@@ -216,10 +328,15 @@ canvas { display: block; width: 100%; height: 100%; }
 }
 .bar.hp i span { background: #c4b39a; }
 .bar.low i span { background: var(--rust); }
+.bar.glow i span {
+  background: #d7fff6;
+  box-shadow: 0 0 8px rgba(170, 255, 236, 0.85);
+}
 
 #prompt, #tip {
   position: absolute;
   left: 50%;
+  z-index: 5;
   transform: translateX(-50%);
   pointer-events: none;
   letter-spacing: 0.14em;
@@ -233,6 +350,7 @@ canvas { display: block; width: 100%; height: 100%; }
   position: absolute;
   left: 7vw;
   bottom: 6vh;
+  z-index: 5;
   width: min(760px, 86vw);
   pointer-events: auto;
 }
@@ -339,6 +457,7 @@ canvas { display: block; width: 100%; height: 100%; }
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 5;
   transform: translate(-50%, -50%);
   pointer-events: none;
   letter-spacing: 0.16em;

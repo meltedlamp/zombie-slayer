@@ -30,7 +30,7 @@
   }
 
   function fill(text, s) {
-    return String(text).replaceAll("{name}", s.name || "Mara");
+    return String(text).replaceAll("{name}", s.name || "Alex");
   }
 
   function resolve(from, s) {
@@ -44,49 +44,58 @@
   const AFTER_GAS = [
     { when: { harris: "secret" }, id: "harris_check" },
     { when: { harris: "delayed" }, id: "harris_check" },
-    { id: "overpass_calm" },
+    { id: "bus_dark" },
   ];
 
   const NODES = {
     opening: {
       kind: "talk",
-      card: "The Glass",
-      kicker: "Day 9  —  Harrow Creek",
+      card: "The Center",
+      kicker: "Day 3  —  Millford",
       arena: "dojo",
       lines: [
-        { text: "The phones are ornaments. The dead are not." },
-        { text: "You locked the dojo because the glass was still glass. Now the glass is only a sound." },
-        { speaker: "June", text: "My mom said six. She said if it got bad, go to {name}, and don't go with anybody else." },
-        { speaker: "Harris", text: "I paid for five to six. I am not being difficult. I am saying the hour is over and the hour is still in the room." },
+        { text: "Day 3 of the outbreak. Phones are dead. The things in the parking lot are not." },
+        { text: "A phone on the floor lights up anyway. The screen says MOM. It rings twice, in her ringtone, and then the same ring starts out in the lot, where nobody living is holding it." },
+        { text: "Mom called at noon. She has Leo, your little brother. They are going to the army checkpoint on the river bridge. She told Mia to find you, and not to go with anyone else." },
+        { text: "Mia made it to the community center. Dean from next door got stuck in here with you. The real sword from Saturday class is still locked at the school. Tonight you have a pipe and a short knife." },
+        { speaker: "Mia", text: "Mom said find {name}. Then we go to the bridge. She has Leo. I'm not going with anybody else." },
+        { speaker: "Dean", text: "I only came in to charge my phone. The side lot still looks empty. I want to leave." },
       ],
       choices: [
-        { text: "We wait with the lights off. If she's coming, she knows the side door.", set: { plan: "wait", juneTrust: "+1" }, log: "You told June you would wait for her mother.", next: "courtyard_reply" },
-        { text: "Six was hours ago. Behind my left shoulder. Don't look at their mouths.", set: { plan: "cut" }, log: "You moved June before she was ready.", next: "courtyard_reply" },
-        { text: "Harris. Walk her to the car. I'll make a path.", set: { plan: "harris", juneTrust: "-1", harris: "obvious" }, log: "You put Harris between June and the dead.", next: "courtyard_reply" },
+        { text: "We wait with the lights off. Mom knows this building. If she's close, she uses the side door.", set: { plan: "wait", juneTrust: "+1" }, log: "You told Mia you would wait a little longer for Mom.", next: "courtyard_reply" },
+        { text: "We're not waiting. Stay behind my left shoulder. Don't look at their faces.", set: { plan: "cut" }, log: "You moved Mia before she was ready.", next: "courtyard_reply" },
+        { text: "Dean, walk her to the car. I'll clear a path.", set: { plan: "harris", juneTrust: "-1", harris: "obvious" }, log: "You put Dean between Mia and the dead.", next: "courtyard_reply" },
       ],
     },
     courtyard_reply: {
       kind: "talk",
       arena: "dojo",
-      place: "The Glass",
+      place: "The Center",
       lines: [
-        { speaker: "June", text: "Okay. Side door. I can be quiet.", when: { plan: "wait" } },
-        { speaker: "Harris", text: "Quiet is a plan until it isn't.", when: { plan: "wait" } },
-        { speaker: "June", text: "She might still be on the road.", when: { plan: "cut" } },
-        { text: "You put her on your left, where the blade isn't.", when: { plan: "cut" } },
-        { speaker: "Harris", text: "I paid for a lesson, not a lane through them.", when: { plan: "harris" } },
-        { text: "You give him the keys anyway. His hand is already wet.", when: { plan: "harris" } },
-        { speaker: "June", text: "That's not what my mom said.", when: { plan: "harris" } },
-        { text: "They come through the front like the front was a suggestion." },
+        { speaker: "Mia", text: "Okay. Side door. I can be quiet.", when: { plan: "wait" } },
+        { speaker: "Dean", text: "Quiet works until one of them hears us.", when: { plan: "wait" } },
+        { speaker: "Mia", text: "Mom might still be on the road.", when: { plan: "cut" } },
+        { text: "You put Mia on your left, away from the pipe.", when: { plan: "cut" } },
+        { speaker: "Dean", text: "I didn't sign up to walk her through them.", when: { plan: "harris" } },
+        { text: "You give him the car keys anyway. His hand is already shaking.", when: { plan: "harris" } },
+        { speaker: "Mia", text: "Mom said not to go with anyone else.", when: { plan: "harris" } },
+        { text: "They come through the front doors." },
       ],
+      next: "voices_lot",
+    },
+    voices_lot: {
+      kind: "black",
+      arena: "dojo",
+      log: "Something in the parking lot said Mia's name in Mom's voice.",
+      text: "The lot is dark.\nSomething out there says Mia's name.\nIt uses Mom's voice. Warm. Exact.\nIt says the name again, closer, and this time the voice is wet.",
       next: "fight_glass",
     },
     fight_glass: {
       kind: "combat",
       arena: "dojo",
-      place: "The Glass",
+      place: "The Center",
       easy: true,
-      tip: "Click cuts. Right mouse blocks. Space dodges. Keep them in front of the blade. A red flash means they are about to grab.",
+      tip: "Click cuts. Right mouse blocks. Space dodges. 1 is the pipe. 2 is the knife. Keep them in front of you. A red flash means they are about to grab.",
       spawn: [{ type: "shambler", count: 3 }],
       next: "shoe",
     },
@@ -94,90 +103,105 @@
       kind: "talk",
       arena: "dojo",
       lines: [
-        { text: "The lot goes quiet the way a room goes quiet when a glass is about to finish falling." },
-        { text: "Harris wipes his shoe on the mat. The mat remembers it.", when: { harris_ne: "obvious" } },
-        { speaker: "Harris", text: "Ankle. Glass. I'm fine.", when: { harris: "obvious" } },
-        { speaker: "June", text: "That's not glass. Glass isn't dark like that.", when: { harris: "obvious" } },
+        { text: "The lot goes quiet. The car is still there. Somewhere behind you, Mom's ringtone plays once and dies." },
+        { text: "Dean wipes his shoe on the mat. The bite on his ankle is still moving after his foot stops.", when: { harris_ne: "obvious" } },
+        { speaker: "Dean", text: "Ankle. I caught it on the door. I'm fine.", when: { harris: "obvious" } },
+        { speaker: "Mia", text: "That's a bite. The skin around it is trying to crawl.", when: { harris: "obvious" } },
       ],
       choices: [
-        { text: "Harris. Sit down and take the shoe off.", next: "confront" },
-        { text: "June, seatbelt. We're leaving while the road is empty.", set: { harris: "secret" }, log: "You saw the shoe and put June in the car anyway.", next: "secret_leave", when: { harris_ne: "obvious" } },
+        { text: "Dean. Sit down and take the shoe off.", next: "confront" },
+        { text: "Mia, seatbelt. We're leaving while the road is empty.", set: { harris: "secret" }, log: "You saw the blood on Dean's ankle and hid it from Mia.", next: "secret_leave", when: { harris_ne: "obvious" } },
       ],
     },
     confront: {
       kind: "talk",
       arena: "dojo",
       lines: [
-        { speaker: "Harris", text: "Don't. Not in front of her. It's a cut from the door." },
-        { speaker: "June", text: "I'm not six. I know what people do when they don't want me to look." },
+        { speaker: "Dean", text: "Don't. Not in front of her. It's just a cut from the door." },
+        { speaker: "Mia", text: "I'm thirteen. I know what people do when they don't want me to look." },
       ],
       choices: [
-        { text: "June. Other side of the brick. Count slow.", set: { harris: "quiet", juneTrust: "-1" }, log: "You sent June away and ended Harris where she could still hear it.", next: "black_quiet" },
-        { text: "Look at her and tell the truth. Then I'll be quick.", set: { harris: "told", juneTrust: "+1" }, log: "You made Harris tell June, and then you ended it in front of her.", next: "black_told" },
-        { text: "Back seat. Towel on the ankle. You tell me if the cold climbs.", set: { harris: "delayed" }, log: "You let Harris keep the bite for the drive.", next: "delay_leave" },
+        { text: "Mia, wait on the other side of the wall. I'll handle it.", set: { harris: "quiet", juneTrust: "-1" }, log: "You sent Mia away and killed Dean where she could still hear it.", next: "black_quiet" },
+        { text: "Tell her the truth. Then I'll make it quick.", set: { harris: "told", juneTrust: "+1" }, log: "You made Dean tell Mia he was bitten, then you ended it in front of her.", next: "black_told" },
+        { text: "Back seat. Towel on the ankle. Tell me if it gets worse.", set: { harris: "delayed" }, log: "You let Dean keep the bite and got in the car.", next: "delay_leave" },
       ],
     },
     black_quiet: {
       kind: "black",
       arena: "dojo",
-      text: "You send June to the far side of the brick.\nYou tell her to count.\nThe sword does not ring. It is too close for that.\nShe gets to eighty-seven.",
+      text: "You send Mia to the other side of the wall.\nYou tell her not to come around.\nDean starts to say her name in a voice that isn't his.\nThe pipe stops him halfway through it.\nShe hears the voice change, and then she hears it stop.",
       next: "after_quiet",
     },
     black_told: {
       kind: "black",
       arena: "dojo",
-      text: "Harris looks at her because you told him to.\nHe says he is sorry about the hour he paid for.\nYou are quick. Quick is not the same as kind.\nJune does not look away. You do not get to ask her to.",
+      text: "Dean looks at Mia because you told him to.\nHe says he's sorry. Halfway through sorry, Mom's voice tries to finish the word.\nHe hears it. He looks sick with it.\nYou are quick.\nMia does not look away.",
       next: "after_told",
     },
     after_quiet: {
       kind: "talk",
       arena: "dojo",
       lines: [
-        { speaker: "June", text: "I heard you stop. I didn't hear him fall. Is that worse?" },
+        { speaker: "Mia", text: "I heard you stop. I didn't see it. Is that worse?" },
       ],
       choices: [
-        { text: "Worse. And I need you to know that.", set: { juneTrust: "+1" }, log: "You told June the quiet killing was worse, not cleaner.", next: "walk_gas" },
-        { text: "Get in. Counting's over.", log: "You told June the counting was over.", next: "walk_gas" },
+        { text: "Yes. You should have seen it. I won't hide the next one.", set: { juneTrust: "+1" }, log: "You told Mia that hiding Dean's death was worse.", next: "walk_gas" },
+        { text: "Get in. It's done.", log: "You told Mia it was done and didn't explain.", next: "walk_gas" },
       ],
     },
     after_told: {
       kind: "talk",
       arena: "dojo",
       lines: [
-        { speaker: "June", text: "He looked at me. You made him look at me." },
-        { speaker: "June", text: "I'm not going to pretend I didn't see a person stop." },
+        { speaker: "Mia", text: "He looked at me. You made him look at me." },
+        { speaker: "Mia", text: "I'm not going to pretend I didn't see a person die." },
       ],
       choices: [
-        { text: "Don't look away from it.", log: "You told June not to look away.", next: "walk_gas" },
-        { text: "You don't have to carry the picture. I'll carry it.", set: { carried: true }, log: "You told June you would carry what Harris looked like at the end.", next: "walk_gas" },
+        { text: "Don't look away from it. That's the truth of this.", log: "You told Mia not to look away.", next: "walk_gas" },
+        { text: "You don't have to carry that. I'll carry it.", set: { carried: true }, log: "You told Mia you would carry what happened to Dean.", next: "walk_gas" },
       ],
     },
     delay_leave: {
       kind: "talk",
       arena: "dojo",
       lines: [
-        { speaker: "Harris", text: "Thank you. I'll say if it changes. I will." },
-        { speaker: "June", text: "He didn't take the shoe off." },
-        { text: "You drive with the sword between the seats, where both of them can see it." },
+        { speaker: "Dean", text: "Thank you. I'll say if it changes. I will." },
+        { speaker: "Mia", text: "He didn't take the shoe off." },
+        { text: "You drive with the pipe between the seats, where both of them can see it. The knife stays in your coat." },
       ],
-      next: "walk_gas",
+      next: "car_dark",
     },
     secret_leave: {
       kind: "talk",
       arena: "dojo",
       lines: [
-        { speaker: "June", text: "He keeps touching his leg." },
-        { text: "You keep your eyes on the road that used to be a road." },
+        { speaker: "Mia", text: "He keeps touching his leg." },
+        { text: "You keep your eyes on the road. You do not tell her why." },
+      ],
+      next: "car_dark",
+    },
+    car_dark: {
+      kind: "talk",
+      arena: "dojo",
+      log: "Dean repeated Mia's words in the car. His mouth was late, and the smile stayed.",
+      lines: [
+        { text: "You get a mile down the road before Dean speaks." },
+        { speaker: "Dean", text: "Okay. Side door. I can be quiet.", when: { plan: "wait" } },
+        { speaker: "Dean", text: "Mom might still be on the road.", when: { plan: "cut" } },
+        { speaker: "Dean", text: "Mom said not to go with anyone else.", when: { plan: "harris" } },
+        { speaker: "Mia", text: "Those are my words. From the center. Why is he saying them?" },
+        { text: "His mouth is a little late for the sentence. When he finishes, the smile stays, like he forgot how to put it away." },
+        { speaker: "Dean", text: "Sorry. It's the ankle. I'm still me. I swear I'm still me." },
       ],
       next: "walk_gas",
     },
     walk_gas: {
       kind: "explore",
-      card: "The Pump",
-      kicker: "Day 9, night",
+      card: "The Station",
+      kicker: "Day 3, night",
       arena: "gas",
       marker: "ellis",
-      hint: "A man is working a hose the ground doesn't owe him.",
+      hint: "A man at the pumps is siphoning gas. He is alive.",
       spawn: [{ type: "shambler", count: 1, ambient: true }],
       next: "ellis_meet",
     },
@@ -185,19 +209,19 @@
       kind: "talk",
       arena: "gas",
       lines: [
-        { speaker: "Ellis", text: "Pump's dead. I'm not. That's a limited-time offer." },
-        { speaker: "Ellis", text: "Name's Ellis Ward. I had a full tank on day one. I gave three rides. You can guess what the fourth person did." },
-        { speaker: "June", text: "He smells like the garage at school.", when: { juneTrust_gte: 0 } },
-        { speaker: "June", text: "Don't let him in the car.", when: { juneTrust_lt: 0 } },
-        { speaker: "Ellis", text: "Kid looks at that sword like it already ate.", when: { harris: "quiet" } },
-        { speaker: "Harris", text: "I'm fine. Drive.", when: { harris: "secret" } },
-        { speaker: "Harris", text: "If we could just get to a pharmacy.", when: { harris: "delayed" } },
-        { speaker: "Ellis", text: "Cooler's mine. Peaches and beans. I am telling you that before anybody gets brave." },
+        { speaker: "Rico", text: "Pumps are dead. I'm not. Name's Rico. I work here. Bathroom door's been opening by itself. Don't look in there." },
+        { speaker: "Rico", text: "I had a full tank on day one. I gave three rides. The fourth person bit the driver. I'm not doing another ride unless I come with the car." },
+        { speaker: "Mia", text: "He smells like the garage at school.", when: { juneTrust_gte: 0 } },
+        { speaker: "Mia", text: "Don't let him in the car.", when: { juneTrust_lt: 0 } },
+        { speaker: "Rico", text: "Kid's staring at that pipe. Somebody already used it.", when: { harris: "quiet" } },
+        { speaker: "Dean", text: "I'm fine. Drive.", when: { harris: "secret" } },
+        { speaker: "Dean", text: "If we can get to a pharmacy, I'll be fine.", when: { harris: "delayed" } },
+        { speaker: "Rico", text: "Cooler's mine. Peaches and beans. I'm saying that before anybody gets brave." },
       ],
       choices: [
-        { text: "Put the sword where he can see it. The car fits us. You siphon, I drive.", set: { ellisWith: true, ellisTrust: "+1" }, log: "You let Ellis Ward into the car.", next: "fight_pump" },
-        { text: "The cooler. Then you can keep the hose.", set: { robbed: true, ellisRaider: true, ellisTrust: "-2", food: "+1" }, log: "You took Ellis's peaches and beans.", next: "fight_lot" },
-        { text: "Leave the lot. Don't look at the cooler.", set: { ellisWith: false }, log: "You left Ellis with the pumps.", next: "fight_pump" },
+        { text: "You can see the pipe. Car fits all of us. You siphon, I drive.", set: { ellisWith: true, ellisTrust: "+1" }, log: "You let Rico into the car.", next: "fight_pump" },
+        { text: "We're taking the cooler. You can keep the hose.", set: { robbed: true, ellisRaider: true, ellisTrust: "-2", food: "+1" }, log: "You took Rico's peaches and beans.", next: "fight_lot" },
+        { text: "Leave him. Don't touch the cooler.", set: { ellisWith: false }, log: "You left Rico at the pumps.", next: "fight_pump" },
       ],
     },
     fight_pump: {
@@ -213,8 +237,8 @@
       kind: "talk",
       arena: "gas",
       lines: [
-        { speaker: "Ellis", text: "You swing that thing like a job. I respect a job. I don't love it." },
-        { speaker: "June", text: "He didn't run.", when: { juneTrust_lt: 0 } },
+        { speaker: "Rico", text: "You swing that pipe like you've done it before. I'll ride with that." },
+        { speaker: "Mia", text: "He didn't run.", when: { juneTrust_lt: 0 } },
       ],
       next: AFTER_GAS,
     },
@@ -222,7 +246,7 @@
       kind: "talk",
       arena: "gas",
       lines: [
-        { text: "Ellis stays with the hose. He lifts a hand, not quite a wave, and then the dark takes the pumps." },
+        { text: "Rico stays with the hose. He lifts a hand, not quite a wave, and the dark takes the pumps." },
       ],
       next: AFTER_GAS,
     },
@@ -236,7 +260,7 @@
       kind: "talk",
       arena: "gas",
       lines: [
-        { text: "He shouts your theft into the lot until the dead answer him. Then he runs." },
+        { text: "Rico shouts that you robbed him until the dead answer. Then he runs." },
         { text: "He looks back once. The cooler is heavier than it was." },
       ],
       next: AFTER_GAS,
@@ -245,62 +269,74 @@
       kind: "talk",
       arena: "gas",
       lines: [
-        { speaker: "June", text: "He's been quiet since the tire shop. Quiet isn't better." },
-        { speaker: "Harris", text: "I thought I could make a pharmacy. You had her in the front. I didn't want the lesson." },
-        { text: "The towel is the wrong color now." },
+        { speaker: "Mia", text: "Dean's been quiet since the tire shop. Quiet isn't better." },
+        { speaker: "Dean", text: "I thought I could make it to a pharmacy. I didn't want her to see." },
+        { text: "The towel on his ankle is the wrong color now. It's a bite. It is not getting better." },
       ],
       choices: [
-        { text: "June. Other side of the pumps. Count again.", set: { harris: "quiet", juneTrust: "-1" }, log: "You sent June away again and ended Harris at the pumps.", next: "black_late_quiet" },
-        { text: "Show her the leg. Then I'll be quick.", set: { harris: "told" }, log: "You made the bite visible before you ended it. Late, but visible.", next: "black_late_told" },
-        { text: "Not yet. We need the miles.", log: "You left the bite alone for the miles.", next: "late_keep" },
+        { text: "Mia, other side of the pumps. Don't watch.", set: { harris: "quiet", juneTrust: "-1" }, log: "You sent Mia away again and killed Dean at the pumps.", next: "black_late_quiet" },
+        { text: "Show her the leg. Then I'll be quick.", set: { harris: "told" }, log: "You showed Mia the bite, then you ended it.", next: "black_late_told" },
+        { text: "Not yet. We need the miles to the bridge.", log: "You left Dean's bite alone and kept driving.", next: "late_keep" },
       ],
     },
     black_late_quiet: {
       kind: "black",
-      text: "The pumps tick as they cool.\nYou do it without a speech.\nJune counts anyway. She never needed you to start her.",
+      text: "The pumps tick as they cool.\nYou do it without a speech.\nMia hears it anyway.",
       next: "late_after",
     },
     black_late_told: {
       kind: "black",
-      text: "He shows her because there is nowhere left to put the leg.\nShe nods like a student who hates the teacher and will still remember the form.\nYou are quick. The hour for quick was the dojo.",
+      text: "He shows her the leg because there is nowhere left to hide it.\nShe nods. She already knew.\nYou are quick. You should have done this at the center.",
       next: "late_after",
     },
     late_after: {
       kind: "talk",
       arena: "gas",
       lines: [
-        { speaker: "June", text: "Don't tell me what number I got to.", when: { harris: "quiet" } },
-        { speaker: "June", text: "You waited until the towel decided.", when: { harris: "told" } },
+        { speaker: "Mia", text: "Don't tell me you did it for me.", when: { harris: "quiet" } },
+        { speaker: "Mia", text: "You waited until the towel decided.", when: { harris: "told" } },
       ],
-      next: "overpass_calm",
+      next: "bus_dark",
     },
     late_keep: {
       kind: "talk",
       arena: "gas",
       lines: [
-        { speaker: "June", text: "If he changes in the back, I am not sitting up front like a person who didn't know." },
+        { speaker: "Mia", text: "If he turns in the back, I am not sitting up front like I didn't know." },
         { text: "You drive anyway." },
       ],
-      next: "overpass_turn",
+      next: "bus_dark",
+    },
+    bus_dark: {
+      kind: "black",
+      arena: "overpass",
+      log: "A school bus on the shoulder was full of small hands. One of them mouthed your name. You did not open the door.",
+      text: "A school bus sits on the shoulder. The lights are on. The door is shut.\nSmall hands press the glass from the inside.\nOne of them mouths your name, careful, like a lesson.\nYou do not open the door.\nAfter you pass, the bus rocks. All of them stood up at once.",
+      next: [
+        { when: { harris: "secret" }, id: "overpass_turn" },
+        { when: { harris: "delayed" }, id: "overpass_turn" },
+        { id: "overpass_calm" },
+      ],
     },
     overpass_calm: {
       kind: "talk",
-      card: "The Overpass",
-      kicker: "Day 9, later",
+      card: "The Highway",
+      kicker: "Day 3, later",
       arena: "overpass",
       lines: [
-        { text: "A car sits half on the shoulder. The woman in it is past talking. Her hands keep the glass honest." },
-        { speaker: "June", text: "She's going to hurt herself before she hurts anybody else." },
-        { speaker: "Ellis", text: "Noise is a door. You sure you want another door?", when: { ellisWith: true } },
+        { text: "A car sits half on the shoulder. The woman inside stops hitting the glass when she sees Mia. She smiles with too many teeth." },
+        { text: "She says, in a little boy's voice, that Mom is at the bridge. Then her jaw slips, and the voice keeps going without the mouth." },
+        { speaker: "Mia", text: "That was Leo's voice. She doesn't know Leo. Make it stop." },
+        { speaker: "Rico", text: "Breaking that glass will be loud. Loud brings more of them.", when: { ellisWith: true } },
       ],
       choices: [
-        { text: "Break the glass. End it before she wears her hands down.", set: { stranger: "cut", calTrust: "+1" }, log: "You broke the car glass and ended the woman inside.", next: "black_stranger" },
-        { text: "Leave her. Noise is how more of them find June.", set: { stranger: "left", calTrust: "-1" }, log: "You left a woman tapping on the car glass.", next: "left_stranger" },
+        { text: "Break the glass. End it before she gets out.", set: { stranger: "cut", calTrust: "+1" }, log: "You broke the car glass and killed the woman before she turned all the way.", next: "black_stranger" },
+        { text: "Leave her. Noise brings more of them down on Mia.", set: { stranger: "left", calTrust: "-1" }, log: "You left a woman trapped in a car, already turning.", next: "left_stranger" },
       ],
     },
     black_stranger: {
       kind: "black",
-      text: "The glass gives.\nShe does not say a name.\nYou hope that means there wasn't one left, and you know hope is a lazy tool.",
+      text: "The glass gives.\nShe tries to say thank you in Mom's voice and only gets halfway.\nWhat is left of her mouth keeps smiling.\nThe noise carries. More of them heard their cue.",
       next: "fight_noise",
     },
     fight_noise: {
@@ -313,21 +349,23 @@
       kind: "talk",
       arena: "overpass",
       lines: [
-        { text: "You leave the tapping behind you. It stays in the ear longer than the road." },
+        { text: "You leave her in the car. She goes back to tapping, and between taps she practices Mia's name until she gets the shape of it right." },
       ],
       next: "truck",
     },
     overpass_turn: {
       kind: "talk",
-      card: "The Overpass",
-      kicker: "Day 9, later",
+      card: "The Highway",
+      kicker: "Day 3, later",
       arena: "overpass",
       onEnter: { juneTrust: "-2" },
-      log: "Harris turned in the car because you kept the miles.",
+      log: "Dean turned in the back seat because you kept driving.",
       lines: [
-        { text: "The back seat makes a sound the back seat should not know." },
-        { speaker: "June", text: "I told you. I told you I wasn't going to sit here and not know." },
-        { speaker: "Ellis", text: "I had one bullet at the pumps. You didn't ask.", when: { ellisWith: true } },
+        { text: "Dean sits up in the back seat. His mouth doesn't match the words." },
+        { speaker: "Dean", text: "Mia. Side door. I can be quiet." },
+        { text: "It is Mom's voice, warm and exact, coming out of what used to be Dean." },
+        { speaker: "Mia", text: "I told you. I told you I wasn't going to sit here and not know." },
+        { speaker: "Rico", text: "He's gone. Get out of the car.", when: { ellisWith: true } },
       ],
       next: "fight_turn",
     },
@@ -335,49 +373,51 @@
       kind: "combat",
       arena: "overpass",
       onEnter: { harris: "turned" },
-      spawn: [{ type: "runner", count: 1, name: "Harris" }, { type: "shambler", count: 2 }],
+      spawn: [{ type: "runner", count: 1, name: "Dean" }, { type: "shambler", count: 2 }],
       next: "after_turn",
     },
     after_turn: {
       kind: "talk",
       arena: "overpass",
       lines: [
-        { speaker: "June", text: "Don't say his name like you spent it carefully." },
-        { text: "The sword is busy. Your hands are not cleaner for the work." },
+        { speaker: "Mia", text: "That was Dean. Say it. Don't skip his name." },
+        { text: "The pipe is busy. Your hands are not cleaner for the work." },
       ],
       next: "truck",
     },
     truck: {
       kind: "talk",
-      card: "The Truck",
-      kicker: "Day 9, late",
+      card: "The Van",
+      kicker: "Day 3, late",
       arena: "truck",
       lines: [
-        { speaker: "Nedra", text: "He's my brother. He's also the last door on this truck. Ian can still make sentences. That's the problem and the mercy." },
-        { speaker: "Ian", text: "Don't let me finish the long way. Nedra won't say it. I'm saying it." },
-        { speaker: "Cal", text: "A man who is still talking is not a grave. I'm Cal. The brother part was a job. Cal is enough." },
-        { speaker: "Cal", text: "I passed a car on the shoulder. Someone had already done the hard thing. I blessed the road anyway.", when: { stranger: "cut" } },
-        { speaker: "Cal", text: "I passed a car where a woman was still asking the glass for something. I will remember the person who walked on.", when: { stranger: "left" } },
-        { speaker: "June", text: "He sounds like my uncle did on the phone. On day two. We hung up to save the battery." },
+        { speaker: "Nora", text: "I'm Nora. That's my brother Ben. He's bitten. He can still talk. I can't do it." },
+        { speaker: "Ben", text: "Don't let me turn. Nora won't say it. I'm saying it. Do it while I still know her." },
+        { text: "His fingers tap the van floor. He doesn't look at them. Outside, the dead tap the same beat back." },
+        { speaker: "Ben", text: "They're learning the song. If I start singing it, don't wait for me to finish." },
+        { speaker: "Sam", text: "I'm Sam. I was a paramedic. If he's still talking, he's still here. I'll stay either way." },
+        { speaker: "Sam", text: "I passed a car back there. Somebody already did the hard thing. That was kinder than leaving her.", when: { stranger: "cut" } },
+        { speaker: "Sam", text: "I passed a car where a woman was still beating on the glass. Someone walked past her.", when: { stranger: "left" } },
+        { speaker: "Mia", text: "He sounds like Uncle Ray did on the phone. On day one. We hung up to save the battery." },
       ],
       choices: [
-        { text: "I'll cut the rope. He doesn't have to finish the sentence.", set: { brother: "cut", calTrust: "-1", water: true }, log: "You ended Ian Cole while he could still talk.", next: "black_brother" },
-        { text: "I'll wait with you. If he turns, I won't be late.", set: { brother: "wait", calTrust: "+1", waited: true, water: true }, log: "You waited with Ian Cole until the talking stopped.", next: "wait_brother" },
-        { text: "Take the car. We'll walk. Keys are kinder than the sword.", set: { brother: "car", calTrust: "+1", ellisTrust: "-1", gaveCar: true, water: true }, log: "You gave Nedra the car and walked.", next: "give_car" },
+        { text: "I'll do it now, while he can still talk.", set: { brother: "cut", calTrust: "-1", water: true }, log: "You killed Ben while he could still talk.", next: "black_brother" },
+        { text: "I'll wait with you. If he turns, I won't be late.", set: { brother: "wait", calTrust: "+1", waited: true, water: true }, log: "You waited with Ben until he turned.", next: "wait_brother" },
+        { text: "Take our car. We'll walk. Get him away from the road.", set: { brother: "car", calTrust: "+1", ellisTrust: "-1", gaveCar: true, water: true }, log: "You gave Nora the car and walked.", next: "give_car" },
       ],
     },
     black_brother: {
       kind: "black",
-      text: "Ian thanks you, which is a rotten kind of thanks.\nNedra holds his hand until you ask her, with your eyes, to hold his shoulder instead.\nThe sword stays a tool. Nobody applauds a tool.",
+      text: "Ben thanks you.\nFor half a second the thank-you is in Nora's voice, copied perfectly.\nHe hears himself do it. He nods, fast, so you won't hesitate.\nNora holds his hand until you tell her to hold his shoulder instead.\nYou are quick. The copied voice does not get a second try.",
       next: "after_brother",
     },
     after_brother: {
       kind: "talk",
       arena: "truck",
       lines: [
-        { speaker: "Nedra", text: "There's water in the blue jug. Take it. I don't want a speech and I don't want you looking at the truck bed." },
-        { speaker: "Cal", text: "You were fast. Fast is a gift and a habit. I am not sure which one I just watched." },
-        { speaker: "Ellis", text: "Habit. You can hear it in the swing.", when: { ellisWith: true } },
+        { speaker: "Nora", text: "There's water in the blue jug. Take it. Don't look in the back of the van." },
+        { speaker: "Sam", text: "You were fast. I don't know yet if that was mercy or a habit." },
+        { speaker: "Rico", text: "Habit. You can hear it in the swing.", when: { ellisWith: true } },
       ],
       next: "cal_join",
     },
@@ -385,23 +425,23 @@
       kind: "talk",
       arena: "truck",
       lines: [
-        { speaker: "Ian", text: "Then stay where I can see the sword. I don't want Nedra to have to learn it." },
-        { text: "The treeline answers before the hour does." },
+        { speaker: "Ben", text: "Then stay where I can see the pipe. I don't want Nora to have to learn how." },
+        { text: "He looks at Nora like he is memorizing how to be her brother. Then the look stays and the person leaves it. He turns with her name already in his mouth." },
       ],
       next: "fight_trees",
     },
     fight_trees: {
       kind: "combat",
       arena: "truck",
-      spawn: [{ type: "runner", count: 1, name: "Ian" }, { type: "shambler", count: 4 }],
+      spawn: [{ type: "runner", count: 1, name: "Ben" }, { type: "shambler", count: 4 }],
       next: "after_trees",
     },
     after_trees: {
       kind: "talk",
       arena: "truck",
       lines: [
-        { speaker: "Nedra", text: "He got what he asked, just not from the quiet. Take the water. Go before I start agreeing with the dead." },
-        { speaker: "Cal", text: "You waited. That counts. It doesn't spend." },
+        { speaker: "Nora", text: "He got what he asked for. It just wasn't quiet. Take the water. Go." },
+        { speaker: "Sam", text: "You waited. That matters. It doesn't make it easier." },
       ],
       next: "cal_join",
     },
@@ -409,10 +449,10 @@
       kind: "talk",
       arena: "truck",
       lines: [
-        { speaker: "Nedra", text: "I won't waste the tank on a scenic route. If he turns, I won't be brave. I'll be quick. You taught me the shape of it by offering the keys." },
-        { speaker: "Ellis", text: "We are walking because you like being the person who gives cars away.", when: { ellisWith: true } },
-        { speaker: "June", text: "My feet are fine. Don't make it a lesson.", when: { ellisWith: false } },
-        { speaker: "Cal", text: "A key given is a prayer with a receipt. I'll take it." },
+        { speaker: "Nora", text: "I won't waste the gas. If he turns, I'll do it. You showed me I have to." },
+        { speaker: "Rico", text: "We're walking because you gave the car away.", when: { ellisWith: true } },
+        { speaker: "Mia", text: "My feet are fine. The bridge is still the plan.", when: { ellisWith: false } },
+        { speaker: "Sam", text: "A car, given free. I'll remember that." },
       ],
       next: "cal_join",
     },
@@ -420,31 +460,37 @@
       kind: "talk",
       arena: "truck",
       lines: [
-        { speaker: "Cal", text: "I'm going where the talking people are. That can be your road or it can be a different one." },
+        { speaker: "Sam", text: "I'm going where there are still living people. That can be your road, or a different one." },
       ],
       choices: [
-        { text: "Then keep up. Left side is June's.", set: { calWith: true }, log: "You let Cal walk with you.", next: "fight_road" },
-        { text: "Find a different road. I mean it.", set: { calWith: false, calTrust: "-1" }, log: "You sent Cal away.", next: "fight_road" },
+        { text: "Then keep up. Mia stays on my left.", set: { calWith: true }, log: "You let Sam walk with you.", next: "fight_road" },
+        { text: "Find a different road. I mean it.", set: { calWith: false, calTrust: "-1" }, log: "You sent Sam away.", next: "fight_road" },
       ],
     },
     fight_road: {
       kind: "combat",
-      arena: "overpass",
-      place: "The road",
+      card: "The Cut",
+      kicker: "Day 3, late",
+      arena: "cut",
+      place: "The Cut",
+      tip: "One of them stays low in the ditch. When it coils, it wants your legs.",
       spawn: (s) => {
         const extra = s.stranger === "cut" ? 1 : 0;
-        if (s.gaveCar) return [{ type: "shambler", count: 4 + extra }, { type: "runner", count: 2 }];
-        return [{ type: "shambler", count: 3 + extra }, { type: "runner", count: 1 }];
+        const pack = s.gaveCar
+          ? [{ type: "shambler", count: 4 + extra }, { type: "runner", count: 2 }]
+          : [{ type: "shambler", count: 3 + extra }, { type: "runner", count: 1 }];
+        pack.push({ type: "crawler", count: 1 });
+        return pack;
       },
       next: "walk_school",
     },
     walk_school: {
       kind: "explore",
-      card: "The Classroom",
-      kicker: "Day 10",
+      card: "The School",
+      kicker: "Day 4",
       arena: "school",
       marker: "door",
-      hint: "June knows the side door. She does not want to.",
+      hint: "Mia knows the side door. Mom might have left word here.",
       spawn: [{ type: "shambler", count: 2, ambient: true }],
       next: "school_door",
     },
@@ -452,50 +498,74 @@
       kind: "talk",
       arena: "school",
       lines: [
-        { speaker: "June", text: "This is the door I'm late through. Don't make it a metaphor. I'm just saying I know which handle sticks." },
-        { text: "Inside, something scrapes a locker the way a shoulder scrapes a wall when the person isn't steering anymore." },
+        { speaker: "Mia", text: "This is the door I'm late through. The handle sticks. Pull up, then in." },
+        { text: "Inside, something scrapes a locker from the wrong side. The metal bows out, like a shoulder that forgot it had bones." },
       ],
+      next: "school_dark",
+    },
+    school_dark: {
+      kind: "black",
+      arena: "school",
+      log: "The school speakers whispered that Leo is with Mom, in Mia's voice. Her mouth was shut.",
+      text: "The PA clicks on. A morning bell. A teacher clearing her throat.\nThen a whisper, right against the speaker: Leo is with Mom.\nAcross the hall, Mia's mouth is shut.\nThe whisper uses her voice anyway.",
       next: "fight_gym",
     },
     fight_gym: {
       kind: "combat",
       arena: "school",
-      spawn: [{ type: "shambler", count: 4 }, { type: "runner", count: 1 }],
+      tip: "The one with the open mouth calls the rest. Cut it while it is still only a mouth. A dodge slips the sound.",
+      spawn: [{ type: "shambler", count: 3 }, { type: "screamer", count: 1 }],
       next: "school_paper",
     },
     school_paper: {
       kind: "talk",
       arena: "school",
       lines: [
-        { text: "A clipboard on the trophy case, emergency pickup, written in a teacher's fast hand: THOMAS PELL." },
-        { text: "June is sixteen. Thomas is the younger one. The paper has been waiting longer than you have." },
+        { text: "A note on the trophy case, in a teacher's fast hand: LEO IS WITH MOM. ARMY BRIDGE. IF MIA COMES HERE, TELL HER WE DID NOT LEAVE HER." },
+        { text: "The same words are scratched into the glass from the inside. The scratches are older than the paper. The building knew before the teacher did." },
+        { text: "Mia is thirteen. Leo is eight. The note has been waiting since yesterday. The scratches have been waiting longer." },
       ],
       choices: [
-        { text: "Ask her where Thomas is before you show her the paper.", set: { asked: true, toldThomas: true, juneTrust: "+1" }, log: "You asked June about Thomas before you showed her the pickup list.", next: "after_paper" },
-        { text: "Put the paper in her hand. No speech.", set: { toldThomas: true }, log: "You handed June the paper with her brother's name and didn't dress it up.", next: "after_paper" },
-        { text: "Fold it into your coat.", set: { hidThomas: true }, log: "You hid Thomas Pell's name in your coat.", next: "after_paper" },
+        { text: "Ask her where Leo is before you show her the note.", set: { asked: true, toldThomas: true, juneTrust: "+1" }, log: "You asked Mia about Leo before you showed her the note.", next: "after_paper" },
+        { text: "Put the note in her hand. No speech.", set: { toldThomas: true }, log: "You handed Mia the note about Leo and Mom.", next: "after_paper" },
+        { text: "Fold the note into your coat. Don't show her yet.", set: { hidThomas: true }, log: "You hid the note about Leo and Mom.", next: "after_paper" },
       ],
     },
     after_paper: {
       kind: "talk",
       arena: "school",
       lines: [
-        { speaker: "June", text: "He's eleven. Aunt's house on Brier Street. He sleeps with one shoe on. I don't know why that's the part I say.", when: { asked: true } },
-        { speaker: "June", text: "You let me say it before the paper did. Thank you. I hate that I have to thank you.", when: { asked: true } },
-        { speaker: "June", text: "Brier Street. If you're about to tell me not to hope, don't. I already know the shape of a street.", when: { toldThomas: true, asked: false } },
-        { text: "The paper rides against your ribs. It knows more than June does, for now.", when: { hidThomas: true } },
-        { speaker: "Ellis", text: "Brier's east. If we live long enough to be lost, that's the direction.", when: { ellisWith: true, toldThomas: true } },
-        { speaker: "Cal", text: "A name written down is still a name. That's not nothing.", when: { calWith: true, toldThomas: true } },
+        { speaker: "Mia", text: "He's eight. He sleeps with one shoe on. I don't know why that's the part I say. Mom has him. They're going to the bridge.", when: { asked: true } },
+        { speaker: "Mia", text: "You let me say it before the note did. Thank you.", when: { asked: true } },
+        { speaker: "Mia", text: "The bridge. If you're about to tell me not to hope, don't. That's the plan.", when: { toldThomas: true, asked: false } },
+        { text: "The note stays in your coat. Mia still thinks you are only guessing.", when: { hidThomas: true } },
+        { speaker: "Rico", text: "The bridge is east. If we live long enough to get lost, that's the direction.", when: { ellisWith: true, toldThomas: true } },
+        { speaker: "Sam", text: "A note that names a place is better than a rumor. The bridge, then.", when: { calWith: true, toldThomas: true } },
       ],
-      next: "walk_farm",
+      next: "sword_case",
+    },
+    sword_case: {
+      kind: "talk",
+      arena: "school",
+      place: "The School",
+      lines: [
+        { text: "Under the note, the trophy case is cracked. On the felt, the kendo sword from Saturday class is waiting." },
+        { text: "The tag is in your handwriting. Return to {name}. A care card is taped behind it: sharpen the edge on a stone, warm the spine over a low flame so it doesn't crack, don't grind the groove." },
+        { speaker: "Mia", text: "That's the one from Saturday. You let us look. You never let us touch it." },
+        { text: "Three days of pipe and knife. This will cut cleaner, once you take it." },
+      ],
+      choices: [
+        { text: "Tell her you left it here for class. Then take it.", set: { swordRank: 1, weapon: "sword", swordTold: true, juneTrust: "+1" }, log: "You took the school sword and told Mia why it was here.", next: "walk_farm" },
+        { text: "Take it. You can explain on the way to the farm.", set: { swordRank: 1, weapon: "sword", swordTold: false }, log: "You took the school sword and didn't explain it.", next: "walk_farm" },
+      ],
     },
     walk_farm: {
       kind: "explore",
-      card: "Miller's",
-      kicker: "Day 10, afternoon",
+      card: "Walsh Farm",
+      kicker: "Day 4, afternoon",
       arena: "farm",
       marker: "gate",
-      hint: "A gate, a rifle barrel, and a man who has already decided he might not like you.",
+      hint: "Last roof before the bridge. A man at the gate already has a rifle.",
       spawn: [{ type: "shambler", count: 1, ambient: true }],
       next: "farm_gate",
     },
@@ -503,24 +573,24 @@
       kind: "talk",
       arena: "farm",
       lines: [
-        { speaker: "Owen", text: "Sword goes in the dirt before the speech. I'm Owen Miller. The woman with the fever in the house is my mother, Ruth. She still runs the names." },
-        { speaker: "Owen", text: "A kid at the pumps told a story about a teacher who does the cutting where children can count. That you?", when: { harris: "quiet" } },
-        { speaker: "Owen", text: "Mechanic with a wrench came through angry. Said a sword took his food. If that was you, say it before the porch does.", when: { robbed: true } },
-        { speaker: "June", text: "I wanted Thomas from you. Not from a pocket.", when: { hidThomas: true } },
-        { speaker: "June", text: "This place has a fence. Don't promise me it means something.", when: { juneTrust_gte: 1 } },
+        { speaker: "Dale", text: "Sword in the dirt before you talk. I'm Dale Walsh. My mother Helen is in the house. She's sick. She still knows everybody's name." },
+        { speaker: "Dale", text: "A kid at the pumps said a person from town killed a bitten man where a girl could hear it. That you?", when: { harris: "quiet" } },
+        { speaker: "Dale", text: "A mechanic came through angry. Said someone took his food with a pipe. If that was you, say it now.", when: { robbed: true } },
+        { speaker: "Mia", text: "You had a note about Leo and you hid it.", when: { hidThomas: true } },
+        { speaker: "Mia", text: "This place has a fence. Don't promise me it means we're safe.", when: { juneTrust_gte: 1 } },
       ],
       choices: [
-        { text: "The sword stays in the dirt. Ask Ruth what she needs.", log: "You put the sword down at Miller's gate.", next: "ruth_talk" },
-        { text: "I'll hold it. If something comes up the lane, the dirt is a bad sheath.", log: "You would not put the sword down for Owen.", next: "ruth_talk" },
+        { text: "The sword goes in the dirt. Ask Helen what she needs.", log: "You put the sword down at Walsh Farm.", next: "ruth_talk" },
+        { text: "I'll hold it. If something comes up the lane, the dirt is a bad place for it.", log: "You would not put the sword down for Dale.", next: "ruth_talk" },
       ],
     },
     ruth_talk: {
       kind: "talk",
       arena: "farm",
       lines: [
-        { speaker: "Ruth", text: "I don't need a performance. I need someone who can decide while the rest of us are still hoping. There's one bottle. Real antibiotics. The date on it is a lie we are choosing to believe." },
-        { speaker: "Ruth", text: "I'm septic. Not bitten. Ordinary dirt in a cut, which feels like an insult. And there's Sam Ibarra in the side room. Eight. Fever. Nobody saw a bite. Nobody looked hard enough to swear." },
-        { speaker: "Owen", text: "You pick wrong, you say it at breakfast. We don't do quiet mercy here unless the mercy asks." },
+        { speaker: "Helen", text: "I don't need a speech. I need a decision. There is one bottle of real antibiotics. The date is old. It's all we have." },
+        { speaker: "Helen", text: "I'm sick from a dirty cut. Not a bite. And Jonah from next door is in the side room. He's eight. Fever. Nobody saw a bite. Nobody looked hard enough to swear." },
+        { speaker: "Dale", text: "You pick wrong, you say it at breakfast. We don't hide it." },
       ],
       next: "sam_truth",
     },
@@ -528,103 +598,135 @@
       kind: "talk",
       arena: "farm",
       lines: [
-        { speaker: "June", text: "Sam sat behind Thomas in assembly. He cried at the fire drill. That's the whole dossier. Don't talk over him like he's a number." },
-        { text: "You stand in the doorway. Sam's eyes are open. His sleeve is damp where somebody already checked, or pretended to." },
+        { speaker: "Mia", text: "Jonah sits behind Leo at assembly. He cried at the fire drill. That's all I know. Don't talk about him like he's a number." },
+        { text: "You stand in the doorway. Jonah's eyes are open. His sleeve is damp where somebody already checked, or pretended to." },
+        { speaker: "Jonah", text: "Don't go to the bridge. She's already waiting there." },
+        { text: "He says it in a clear voice, looking at you, a person he has never met. Then he blinks, asks for water, and does not remember saying anything." },
+        { speaker: "Mia", text: "He doesn't know you. He doesn't know the bridge. How does he know?" },
       ],
       choices: [
-        { text: "That's a bite until a morning proves it isn't. Say it while it can be said.", set: { saidFever: "bite", juneTrust: "+1" }, log: "You called Sam's fever a bite out loud.", next: "meds" },
-        { text: "It could be a cold. We don't bury a guess.", set: { saidFever: "cold" }, log: "You called Sam's fever a cold.", next: "meds" },
+        { text: "That's a bite until morning proves it isn't. I'm saying it out loud.", set: { saidFever: "bite", juneTrust: "+1" }, log: "You called Jonah's fever a bite, out loud.", next: "meds" },
+        { text: "It could be a normal fever. I'm not burying a guess.", set: { saidFever: "cold" }, log: "You called Jonah's fever a normal sickness.", next: "meds" },
       ],
     },
     meds: {
       kind: "talk",
       arena: "farm",
       lines: [
-        { speaker: "Ruth", text: "One bottle. If you split it, you waste it. I've done the arithmetic. I hate the arithmetic." },
-        { speaker: "June", text: "You already said what you think he is.", when: { saidFever: "bite" } },
-        { speaker: "June", text: "You said cold. Say it again if you're about to spend him.", when: { saidFever: "cold" } },
+        { speaker: "Helen", text: "One bottle. If you split it, you waste it. I've done the math. I hate the math." },
+        { speaker: "Mia", text: "You already said what you think he is.", when: { saidFever: "bite" } },
+        { speaker: "Mia", text: "You said it was a fever. Say it again if you're about to give the medicine to someone else.", when: { saidFever: "cold" } },
       ],
       choices: [
-        { text: "Ruth gets the bottle. The farm dies if the woman who knows the names dies.", set: { meds: "ruth", samAlive: false, ruthAlive: true, peteAlive: true }, log: "You gave the antibiotics to Ruth.", next: "after_meds", when: { saidFever: "bite" } },
-        { text: "Ruth gets the bottle. You already called the boy a cold so this could be easier.", set: { meds: "ruth", samAlive: false, ruthAlive: true, peteAlive: true, juneTrust: "-1" }, log: "You named a bite a cold, then spent the medicine on Ruth.", next: "after_meds", when: { saidFever: "cold" } },
-        { text: "Sam gets it. He's small, and he's scared, and I won't make June watch me choose a ledger.", set: { meds: "sam", samAlive: true, ruthAlive: false, peteAlive: false, juneTrust: "+1" }, log: "You gave the antibiotics to Sam.", next: "after_meds" },
-        { text: "The bottle stays in the coat. I don't know enough.", set: { meds: "kept", samAlive: false, ruthAlive: false, peteAlive: false, juneTrust: "-1" }, log: "You kept the medicine in your coat.", next: "after_meds" },
+        { text: "Helen gets it. The farm falls apart if the person who knows everyone dies.", set: { meds: "ruth", samAlive: false, ruthAlive: true, peteAlive: true }, log: "You gave the antibiotics to Helen.", next: "after_meds", when: { saidFever: "bite" } },
+        { text: "Helen gets it. You called Jonah a fever so this would be easier.", set: { meds: "ruth", samAlive: false, ruthAlive: true, peteAlive: true, juneTrust: "-1" }, log: "You called a bite a fever, then gave the medicine to Helen.", next: "after_meds", when: { saidFever: "cold" } },
+        { text: "Jonah gets it. He's eight, and he's scared.", set: { meds: "sam", samAlive: true, ruthAlive: false, peteAlive: false, juneTrust: "+1" }, log: "You gave the antibiotics to Jonah.", next: "after_meds" },
+        { text: "The bottle stays in my coat. I don't know enough.", set: { meds: "kept", samAlive: false, ruthAlive: false, peteAlive: false, juneTrust: "-1" }, log: "You kept the medicine.", next: "after_meds" },
       ],
     },
     after_meds: {
       kind: "talk",
       arena: "farm",
       lines: [
-        { speaker: "Owen", text: "Then we hold the fence like people who still have a mother giving orders.", when: { ruthAlive: true } },
-        { speaker: "Owen", text: "All right. Then I'm the name. Don't make me thank you for picking the boy. I won't. I'll run the watch.", when: { meds: "sam" } },
-        { speaker: "Owen", text: "I can smell the plastic when you move. You kept it. If the night takes this place, you remember the weight of that coat.", when: { meds: "kept" } },
-        { speaker: "Pete", text: "Left side's mine. You take the gate. Try not to enjoy it.", when: { peteAlive: true } },
-        { text: "The fields go the color of a bruise. Something at the tree line has decided the fence is a rumor.", when: { peteAlive: false } },
+        { speaker: "Dale", text: "Then we hold the fence. Mom's still giving orders.", when: { ruthAlive: true } },
+        { speaker: "Dale", text: "All right. Then I'm in charge. I won't thank you for picking the boy. I'll run the watch.", when: { meds: "sam" } },
+        { speaker: "Dale", text: "I can hear that bottle when you move. You kept it. If tonight takes this place, you remember that.", when: { meds: "kept" } },
+        { speaker: "Ray", text: "Left side's mine. You take the gate.", when: { peteAlive: true } },
+        { text: "The fields go dark. Something at the tree line has decided the fence is only a fence.", when: { peteAlive: false } },
       ],
       next: "night_talk",
     },
     night_talk: {
       kind: "talk",
-      card: "What the Fence Knows",
-      kicker: "Day 10, night",
-      arena: "farmNight",
+      card: "The Fence",
+      kicker: "Day 4, night",
+      arena: "treeline",
+      place: "The Tree Line",
       lines: [
-        { speaker: "June", text: "If I go left, you don't get to be noble about it. Just tell me where your sword isn't." },
-        { speaker: "Ellis", text: "I'll take the loud side. Kid stays where she can see a person who isn't swinging.", when: { ellisWith: true } },
-        { speaker: "Cal", text: "I'll pray low. If that bothers you, pretend it's counting.", when: { calWith: true } },
-        { text: "They come the way weather comes. The fence finds out what it was worth." },
+        { speaker: "Mia", text: "If I go left, tell me where you're swinging. I don't want the sword in my way." },
+        { speaker: "Rico", text: "I'll take the loud side. Kid stays where she can see a person who isn't swinging.", when: { ellisWith: true } },
+        { speaker: "Sam", text: "I'll stay low and pull anyone who goes down. That's the job.", when: { calWith: true } },
+        { text: "Dale sends you past the gate. The house stays behind you. Out here it's corn, a shed that already fell, and the trees." },
       ],
+      next: "corn_dark",
+    },
+    corn_dark: {
+      kind: "black",
+      arena: "treeline",
+      log: "The corn said your name, then Mia's, then Mom's. The last one was perfect.",
+      text: "Past the gate, the corn says your name.\nThen it says Mia's.\nThen it says Mom's, and that one is perfect. The way she said it when she was only calling you in for dinner.\nNothing walks out. The field just knows who to call.\nThen the tree line answers, and it is not a voice anymore.",
       next: "fight_fence",
     },
     fight_fence: {
       kind: "combat",
-      arena: "farmNight",
+      arena: "treeline",
+      place: "The Tree Line",
+      tip: "The swollen one comes apart. Give the body room when it does.",
       spawn: (s) => [
         { type: "shambler", count: s.ruthAlive ? 5 : 8 },
         { type: "runner", count: s.ruthAlive ? 1 : 2 },
+        { type: "bloater", count: 1 },
       ],
       next: "morning",
     },
     morning: {
       kind: "talk",
       card: "Morning",
-      kicker: "Day 11",
-      arena: "farm",
+      kicker: "Day 5",
+      arena: "well",
+      place: "The Well",
       lines: [
-        { text: "You get one quiet hour. The trucks on the county road will spend the rest." },
-        { speaker: "Ruth", text: "Sam didn't see this light. The fever broke into a bite near dawn. You don't have to say you knew.", when: { meds: "ruth" } },
-        { speaker: "Owen", text: "Sam ate. That's the report. My mother didn't. I will not make the report prettier.", when: { meds: "sam" } },
-        { speaker: "Owen", text: "Both of them. And the bottle still clicks when you breathe. Get off my porch when the hour's done.", when: { meds: "kept" } },
-        { speaker: "Pete", text: "Gate held. Don't name that after yourself.", when: { peteAlive: true } },
-        { speaker: "June", text: "If you're going to sit, sit. If you're going to sharpen, do it where I don't have to watch the stone like it's a person.", when: { juneTrust_gte: 0 } },
-        { speaker: "June", text: "Don't spend the hour on me. I'm still here. That's the favor.", when: { juneTrust_lt: 0 } },
+        { text: "The quiet hour is at the well, behind the house. The porch lamp is still warm. Then the trucks on the county road will spend the rest of the day." },
+        { speaker: "Helen", text: "Jonah didn't see this light. The fever broke into a bite near dawn. You don't have to say you knew.", when: { meds: "ruth" } },
+        { speaker: "Dale", text: "Jonah ate breakfast. Mom didn't. That's the report. I won't dress it up.", when: { meds: "sam" } },
+        { speaker: "Dale", text: "Both of them are gone. And the bottle still clicks when you breathe. Be off my porch when the hour's done.", when: { meds: "kept" } },
+        { speaker: "Ray", text: "Gate held. Don't put your name on that.", when: { peteAlive: true } },
+        { speaker: "Mia", text: "If you're going to sit, sit. If you're going to sharpen that sword, do it where I don't have to watch.", when: { juneTrust_gte: 0 } },
+        { speaker: "Mia", text: "Don't spend the hour on me. I'm still here. That's enough.", when: { juneTrust_lt: 0 } },
       ],
       choices: [
-        { text: "Sit with June and don't fill the quiet. You said you would carry the picture.", set: { carriedPaid: true, juneTrust: "+1", hour: "june" }, log: "You spent the quiet hour with June, the way you said you would.", next: "after_morning", when: { carried: true } },
-        { text: "Walk the fence with June. Leave the sword in the dirt.", set: { juneTrust: "+1", swordDown: true, hour: "fence" }, log: "You left the sword in the dirt and walked the fence with June.", next: "after_morning", when: { juneTrust_gte: 0 } },
-        { text: "Give June the last of the peaches.", set: { food: "-1", juneTrust: "+1", hour: "food" }, log: "You gave June the last can of peaches.", next: "after_morning", when: { food_gte: 1 } },
-        { text: "Put the stone to the blade and let the hour be a blade hour.", set: { sharpened: true, bladeWear: 0, hour: "sharpen" }, log: "You spent the quiet hour sharpening the sword.", next: "after_morning" },
+        { text: "Sit with Mia and don't fill the quiet. You said you would carry what happened to Dean.", set: { carriedPaid: true, juneTrust: "+1", hour: "june" }, log: "You spent the quiet hour with Mia, the way you said you would.", next: "after_morning", when: { carried: true } },
+        { text: "Walk the fence with Mia. Leave the sword in the dirt.", set: { juneTrust: "+1", swordDown: true, hour: "fence" }, log: "You left the sword in the dirt and walked the fence with Mia.", next: "after_morning", when: { juneTrust_gte: 0 } },
+        { text: "Give Mia the last of the peaches.", set: { food: "-1", juneTrust: "+1", hour: "food" }, log: "You gave Mia the last can of peaches.", next: "after_morning", when: { food_gte: 1 } },
+        { text: "Sharpen the sword the way the care card said. Don't grind the groove.", set: { sharpened: true, bladeWear: 0, hour: "sharpen", swordRank: 2, weapon: "sword" }, log: "You spent the quiet hour sharpening the sword.", next: "after_morning" },
       ],
     },
     after_morning: {
       kind: "talk",
-      arena: "farm",
+      arena: "well",
       lines: [
-        { speaker: "June", text: "Okay. That's enough hour.", when: { hour: "june" } },
-        { text: "The sword looks smaller in the dirt. You pick it up when the engines start, because dirt does not keep a weapon and neither do you.", when: { hour: "fence" } },
-        { speaker: "June", text: "They taste like a door shut soft. Don't ruin it by asking if I'm grateful.", when: { hour: "food" } },
-        { text: "The edge comes back. Everything you didn't say stays dull.", when: { hour: "sharpen" } },
-        { speaker: "Owen", text: "Trucks. Two. They stopped where the corn can hear them." },
+        { speaker: "Mia", text: "Okay. That's enough. Bridge is still the plan.", when: { hour: "june" } },
+        { text: "The sword looks smaller in the dirt. You pick it up when the engines start. Dirt does not keep a weapon.", when: { hour: "fence" } },
+        { speaker: "Mia", text: "They taste like a normal morning. Don't ruin it by asking if I'm grateful.", when: { hour: "food" } },
+        { text: "The edge comes back clean. The groove is the same. You left it alone, like the card said.", when: { hour: "sharpen" } },
+        { speaker: "Dale", text: "Trucks. Two of them. They stopped where the corn can hear them. They're between us and the bridge." },
+      ],
+      next: [
+        { when: { hour: "sharpen" }, id: "temper" },
+        { id: "walk_voss" },
+      ],
+    },
+    temper: {
+      kind: "talk",
+      arena: "well",
+      onEnter: { swordRank: 3, weapon: "sword" },
+      log: "You warmed the spine of the sword over the porch lamp, the way the care card said.",
+      lines: [
+        { text: "The care card had a second step. You hold the spine over the porch lamp until the steel takes a low heat. You do not let the stone touch the groove." },
+        { text: "It won't crack on the next hard swing. This is the sword you left at the school, just looked after." },
+        { speaker: "Mia", text: "It looks like Saturday class again. Don't ask me to be proud of a weapon.", when: { swordTold: true } },
+        { speaker: "Mia", text: "You still haven't said why it was at school.", when: { swordTold: false } },
+        { speaker: "Rico", text: "That's a long way from a pipe. I'll still take the loud side.", when: { ellisWith: true } },
       ],
       next: "walk_voss",
     },
     walk_voss: {
       kind: "explore",
-      card: "Seed",
-      kicker: "Day 11",
+      card: "The Block",
+      kicker: "Day 5",
       arena: "roadblock",
       marker: "voss",
-      hint: "Voss wants the seed corn. He has trucks and people who are not dead.",
+      hint: "Kane wants half the farm's food. His trucks are blocking the road to the bridge.",
       spawn: [{ type: "shambler", count: 1, ambient: true }],
       next: "voss_talk",
     },
@@ -632,27 +734,27 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { speaker: "Voss", text: "Half the seed corn. You keep the people, the well, and the story you tell about yourselves. I keep my trucks from becoming a fire." },
-        { speaker: "Voss", text: "Voss is the whole name. Don't spend time looking for a softer one." },
-        { speaker: "Ellis", text: "You took the cooler. He took me in. Get off the high horse before it bites you.", when: { ellisRaider: true } },
-        { speaker: "June", text: "Don't trade anything that has a name.", when: { juneAlive: true, juneTrust_gte: 0 } },
-        { speaker: "Cal", text: "Corn is not a child. It is also not nothing. Choose like you'll eat the consequence.", when: { calWith: true } },
+        { speaker: "Kane", text: "Half the food. You keep the people, the well, and the road to the bridge. I keep my trucks from burning the farm." },
+        { speaker: "Kane", text: "Kane. That's the whole name. Don't look for a softer one." },
+        { speaker: "Rico", text: "You took my cooler. Kane took me in. Get off the high horse.", when: { ellisRaider: true } },
+        { speaker: "Mia", text: "Don't trade a person. Food is food. I'm not food.", when: { juneAlive: true, juneTrust_gte: 0 } },
+        { speaker: "Sam", text: "Food isn't a child. It also isn't nothing. Choose like you'll have to eat the result.", when: { calWith: true } },
       ],
       choices: [
-        { text: "The peaches were wrong. Come back anyway.", set: { ellisRaider: false, ellisWith: true, ellisAlive: true, ellisTrust: 0, ellisExit: "" }, log: "You asked Ellis to come back, and he did.", next: "ellis_down", when: { ellisRaider: true, harris_nin: ["quiet", "turned"] } },
-        { text: "Half the corn. Take your trucks, and the mechanic if he still wants them.", set: { voss: "parley", sparedVoss: true, ellisRaider: false, ellisExit: "voss", ellisWith: false, calTrust: "+1" }, log: "You gave Voss half the seed corn.", next: "after_parley", when: { ellisRaider: true } },
-        { text: "Half the seed corn. You leave the people and the gate.", set: { voss: "parley", sparedVoss: true, calTrust: "+1" }, log: "You gave Voss half the seed corn.", next: "after_parley", when: { ellisRaider: false } },
-        { text: "No.", set: { voss: "fight" }, log: "You refused Voss.", next: "fight_raiders" },
-        { text: "Just you and me. They stay back.", set: { voss: "duel" }, log: "You offered Voss a single fight.", next: "fight_duel" },
-        { text: "Take the girl and leave the farm. You hear yourself say it. You do not take it back.", set: { juneAlive: false, voss: "trade", calWith: false, calTrust: "-2", juneTrust: "-5" }, log: "You offered June to Voss to spare the farm.", next: "trade_june", when: { juneTrust_lt: 0, juneAlive: true } },
+        { text: "Rico. Taking the cooler was wrong. Come back with us.", set: { ellisRaider: false, ellisWith: true, ellisAlive: true, ellisTrust: 0, ellisExit: "" }, log: "You asked Rico to come back, and he did.", next: "ellis_down", when: { ellisRaider: true } },
+        { text: "Half the food. Take your trucks, and Rico if he still wants them.", set: { voss: "parley", sparedVoss: true, ellisRaider: false, ellisExit: "voss", ellisWith: false, calTrust: "+1" }, log: "You gave Kane half the food. Rico left with the trucks.", next: "after_parley", when: { ellisRaider: true } },
+        { text: "Half the food. You leave the people, and you clear the road to the bridge.", set: { voss: "parley", sparedVoss: true, calTrust: "+1" }, log: "You gave Kane half the food.", next: "after_parley", when: { ellisRaider: false } },
+        { text: "No. The food stays. So do we.", set: { voss: "fight" }, log: "You refused Kane.", next: "fight_raiders" },
+        { text: "Just you and me. Your people stay back.", set: { voss: "duel" }, log: "You offered Kane a one-on-one fight.", next: "fight_duel" },
+        { text: "Take Mia, and leave the farm alone.", set: { juneAlive: false, voss: "trade", calWith: false, calTrust: "-2", juneTrust: "-5" }, log: "You offered Mia to Kane to spare the farm.", next: "trade_june", when: { juneTrust_lt: 0, juneAlive: true } },
       ],
     },
     ellis_down: {
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { speaker: "Ellis", text: "I'm not your friend. I'm on the left so the kid has somewhere to stand that isn't you. Don't dress it up." },
-        { speaker: "Voss", text: "Fine. The mechanic's soft. I'm not. Half the corn, or I start with the porch." },
+        { speaker: "Rico", text: "I'm not your friend. I'm here so the kid has somebody who isn't you. Don't dress it up." },
+        { speaker: "Kane", text: "Fine. The mechanic's soft. I'm not. Half the food, or I start with the porch." },
       ],
       next: "voss_deal",
     },
@@ -660,36 +762,36 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { speaker: "June", text: "He's still a man with trucks.", when: { juneAlive: true } },
+        { speaker: "Mia", text: "He's still a man with trucks and guns.", when: { juneAlive: true } },
       ],
       choices: [
-        { text: "Half the seed corn. You leave the people and the gate.", set: { voss: "parley", sparedVoss: true, calTrust: "+1" }, log: "You gave Voss half the seed corn.", next: "after_parley" },
-        { text: "No.", set: { voss: "fight" }, log: "You refused Voss.", next: "fight_raiders" },
-        { text: "Just you and me. They stay back.", set: { voss: "duel" }, log: "You offered Voss a single fight.", next: "fight_duel" },
-        { text: "Take the girl and leave the farm. You hear yourself say it. You do not take it back.", set: { juneAlive: false, voss: "trade", calWith: false, calTrust: "-2", juneTrust: "-5" }, log: "You offered June to Voss to spare the farm.", next: "trade_june", when: { juneTrust_lt: 0, juneAlive: true } },
+        { text: "Half the food. You leave the people, and you clear the road.", set: { voss: "parley", sparedVoss: true, calTrust: "+1" }, log: "You gave Kane half the food.", next: "after_parley" },
+        { text: "No. The food stays.", set: { voss: "fight" }, log: "You refused Kane.", next: "fight_raiders" },
+        { text: "Just you and me. Your people stay back.", set: { voss: "duel" }, log: "You offered Kane a one-on-one fight.", next: "fight_duel" },
+        { text: "Take Mia, and leave the farm alone.", set: { juneAlive: false, voss: "trade", calWith: false, calTrust: "-2", juneTrust: "-5" }, log: "You offered Mia to Kane to spare the farm.", next: "trade_june", when: { juneTrust_lt: 0, juneAlive: true } },
       ],
     },
     after_parley: {
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { speaker: "Voss", text: "Corn in the beds. We leave the gate standing. If I see you on my road with that sword hungry, I won't make a speech." },
-        { speaker: "Owen", text: "We'll eat shorter. We'll eat. I can hate you and still count the sacks." },
-        { speaker: "Ellis", text: "Don't wait up.", when: { ellisExit: "voss" } },
-        { speaker: "Cal", text: "You bought a morning. Mornings are not cheap. They're still mornings.", when: { calWith: true } },
+        { speaker: "Kane", text: "Food in the truck beds. The gate stays up. The road to the bridge is open. If I see that sword pointed at my people, I won't talk next time." },
+        { speaker: "Dale", text: "We'll eat less. We'll eat. I can hate the deal and still count the sacks." },
+        { speaker: "Rico", text: "Don't wait up.", when: { ellisExit: "voss" } },
+        { speaker: "Sam", text: "You bought a morning. Mornings aren't free. They're still mornings.", when: { calWith: true } },
       ],
       next: "river",
     },
     fight_raiders: {
       kind: "combat",
       arena: "roadblock",
-      tip: "Living people shoot. The streak is slow if you move. Closing in makes them use a knife.",
+      tip: "Living people shoot. The shot is slow if you move. Get close and they switch to a knife.",
       spawn: (s) => {
         const list = [
           { type: "raider", count: 2 },
-          { type: "raider", count: 1, name: "Voss", id: "voss", hp: 100 },
+          { type: "raider", count: 1, name: "Kane", id: "voss", hp: 100 },
         ];
-        if (s.ellisRaider) list.push({ type: "raider", count: 1, name: "Ellis", id: "ellis", hp: 64 });
+        if (s.ellisRaider) list.push({ type: "raider", count: 1, name: "Rico", id: "ellis", hp: 64 });
         return list;
       },
       next: "after_raiders",
@@ -698,18 +800,18 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { text: "The trucks tick as they cool. Nobody is going to call this a victory out loud." },
-        { speaker: "Owen", text: "The corn stays. So do the bodies. I know which one the crows will argue about." },
-        { speaker: "June", text: "Ellis ran the wrong way and then he stopped.", when: { ellisExit: "dead" } },
-        { speaker: "Ellis", text: "I kept her behind the truck. That's the sentence. Don't add to it.", when: { ellisWith: true, ellisAlive: true } },
-        { speaker: "Cal", text: "I will bury the ones who still have faces. I won't ask you to help.", when: { calWith: true } },
+        { text: "The trucks tick as they cool. The road to the bridge is open. Nobody is going to call this a win out loud." },
+        { speaker: "Dale", text: "The food stays. So do the bodies." },
+        { speaker: "Mia", text: "Rico ran the wrong way, and then he stopped.", when: { ellisExit: "dead" } },
+        { speaker: "Rico", text: "I kept her behind the truck. That's the whole sentence.", when: { ellisWith: true, ellisAlive: true } },
+        { speaker: "Sam", text: "I'll bury the ones who still have faces. I won't ask you to help.", when: { calWith: true } },
       ],
       next: "river",
     },
     fight_duel: {
       kind: "combat",
       arena: "roadblock",
-      spawn: [{ type: "raider", count: 1, name: "Voss", id: "voss", hp: 120 }],
+      spawn: [{ type: "raider", count: 1, name: "Kane", id: "voss", hp: 120 }],
       next: [
         { when: { ellisRaider: true }, id: "after_duel_ellis" },
         { id: "after_duel" },
@@ -719,9 +821,9 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { text: "Voss drops the way a man drops, which is worse than the other kind because the sword knows the difference." },
-        { speaker: "Owen", text: "One body. The corn stays. I don't know if that's the trade you think it is." },
-        { speaker: "June", text: "You didn't have to make it a show. You did it anyway.", when: { juneAlive: true } },
+        { text: "Kane drops. He was alive a second ago. The sword knows the difference, and so do you." },
+        { speaker: "Dale", text: "One body. The food stays. The road is open. I don't know if that's the trade you think it is." },
+        { speaker: "Mia", text: "You didn't have to make it a show.", when: { juneAlive: true } },
       ],
       next: "river",
     },
@@ -729,10 +831,10 @@
       kind: "talk",
       arena: "roadblock",
       onEnter: { ellisRaider: false, ellisExit: "fled", ellisWith: false },
-      log: "Ellis saw Voss fall and took the road.",
+      log: "Rico saw Kane fall and took the road.",
       lines: [
-        { speaker: "Ellis", text: "I'm not next. Remember that you made a show." },
-        { text: "He takes the road. He doesn't take a truck. That feels like a kind of honesty." },
+        { speaker: "Rico", text: "I'm not next. Remember you made a show of it." },
+        { text: "He takes the road. He doesn't take a truck." },
       ],
       next: "river",
     },
@@ -740,9 +842,9 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { speaker: "Voss", text: "I don't steal children. I take what a place puts on the table. Remember who set the table." },
-        { speaker: "Owen", text: "Get the sword off my farm. The corn can stay. I will not say her name so you can feel it." },
-        { speaker: "Cal", text: "I won't walk behind that. Don't follow me and call it penance." },
+        { speaker: "Kane", text: "I don't steal kids. I take what a place puts on the table. Remember who set it." },
+        { speaker: "Dale", text: "Get that sword off my farm. The food can stay. I will not say her name for you." },
+        { speaker: "Sam", text: "I won't walk with you after that." },
       ],
       next: "after_trade",
     },
@@ -750,40 +852,42 @@
       kind: "talk",
       arena: "roadblock",
       lines: [
-        { text: "The trucks leave. The left side of you is only air." },
-        { text: "Nobody loads a gun. They don't have to." },
+        { text: "The trucks leave with Mia. Your left side is empty." },
+        { text: "Nobody loads a gun. They don't have to. The road to the bridge is open, and she isn't on it." },
       ],
       next: "river",
     },
     river: {
       kind: "talk",
       arena: "farm",
-      place: "Miller's gate",
+      place: "Walsh gate",
       lines: [
-        { text: "The argument happens at the gate because every road is visible from it, and nobody wants to turn their back first." },
-        { speaker: "June", text: "Brier Street. I'm not asking you to promise he's alive. I'm asking you not to make me go alone.", when: { juneAlive: true, toldThomas: true, juneTrust_gte: 1 } },
-        { speaker: "June", text: "I know the way. I don't know if I know you.", when: { juneAlive: true, juneTrust_lt: 2, toldThomas: true } },
-        { speaker: "Cal", text: "There's a signal past the bridge. A voice that still knows street names. I want to hear which names.", when: { calWith: true } },
-        { speaker: "Ellis", text: "Signals are how you starve pretty. The gate is ugly and it eats.", when: { ellisWith: true } },
-        { speaker: "Owen", text: "If you stay, you take a watch like a person, not a weapon that sleeps in the yard.", when: { ruthAlive: true } },
-        { speaker: "Owen", text: "Stay if you're staying to bury mornings. Don't stay to be thanked.", when: { ruthAlive: false } },
-        { text: "The bridge is already full of the other argument. The one that doesn't use words.", when: { juneAlive: false } },
+        { text: "You decide at the gate, because every road is visible from it. The army bridge is one of them. Mom and Leo were going there." },
+        { speaker: "Mia", text: "The bridge. I'm not asking you to promise Leo is alive. I'm asking you not to make me go alone.", when: { juneAlive: true, toldThomas: true, juneTrust_gte: 0, hidThomas: false } },
+        { speaker: "Mia", text: "I know the way to the bridge. I'm not walking it with you.", when: { juneAlive: true, juneTrust_lt: 0, toldThomas: true } },
+        { speaker: "Mia", text: "You never told me what the note said. I found it anyway. I'm still not sure about you.", when: { juneAlive: true, hidThomas: true, juneTrust_gte: 0 } },
+        { speaker: "Sam", text: "There's a radio signal past the bridge. A voice that still says street names. I want to hear which streets.", when: { calWith: true, calTrust_gte: 1 } },
+        { speaker: "Sam", text: "I heard a signal. I'm not taking you to it.", when: { calWith: true, calTrust_lt: 1 } },
+        { speaker: "Rico", text: "Signals don't feed you. The gate does. Ugly, but it eats.", when: { ellisWith: true } },
+        { speaker: "Dale", text: "If you stay, you take a watch like a person, not a weapon that sleeps in the yard.", when: { ruthAlive: true } },
+        { speaker: "Dale", text: "Stay if you're staying to bury the morning. Don't stay to be thanked.", when: { ruthAlive: false } },
+        { text: "The bridge is still there. Mia is not.", when: { juneAlive: false } },
       ],
       choices: [
-        { text: "Stay. Put the sword by the door and take a watch.", set: { road: "stay" }, log: "You chose to stay at Miller's.", next: "walk_bridge", when: { ruthAlive: true } },
+        { text: "Stay. Sword by the door. Take a watch.", set: { road: "stay" }, log: "You chose to stay at Walsh Farm.", next: "walk_bridge", when: { ruthAlive: true } },
         { text: "Stay anyway. Someone has to bury the morning.", set: { road: "stay" }, log: "You stayed at a farm that already broke.", next: "walk_bridge", when: { ruthAlive: false } },
-        { text: "Take June and look for Thomas on Brier Street.", set: { road: "brother" }, log: "You chose June's road toward Brier Street.", next: "walk_bridge", when: { juneAlive: true, juneTrust_gte: 2, toldThomas: true } },
-        { text: "Go with Cal toward the signal.", set: { road: "signal" }, log: "You chose Cal's signal past the water.", next: "walk_bridge", when: { calWith: true, calTrust_gte: 1 } },
-        { text: "Leave before anyone can follow.", set: { road: "alone" }, log: "You left before anyone could follow.", next: "walk_bridge" },
+        { text: "Take Mia to the bridge and look for Mom and Leo.", set: { road: "brother" }, log: "You chose the bridge, with Mia, to look for Mom and Leo.", next: "walk_bridge", when: { juneAlive: true, juneTrust_gte: 0, toldThomas: true } },
+        { text: "Go with Sam toward the radio signal.", set: { road: "signal" }, log: "You chose Sam's radio signal past the bridge.", next: "walk_bridge", when: { calWith: true, calTrust_gte: 1 } },
+        { text: "Leave alone, before anyone can follow.", set: { road: "alone" }, log: "You left alone.", next: "walk_bridge" },
       ],
     },
     walk_bridge: {
       kind: "explore",
-      card: "The Water",
-      kicker: "Day 11, evening",
+      card: "The Bridge",
+      kicker: "Day 5, evening",
       arena: "bridge",
       marker: "span",
-      hint: "The bridge is a dark bone over the water. They are already on it.",
+      hint: "The bridge is the army checkpoint. The dead are already on it.",
       spawn: [{ type: "shambler", count: 2, ambient: true }],
       next: "pre_bridge",
     },
@@ -791,19 +895,33 @@
       kind: "talk",
       arena: "bridge",
       lines: [
-        { text: "They heard the sword, or they heard the living. It doesn't matter which rumor was faster." },
-        { speaker: "June", text: "Left side. Like the first time. Don't miss.", when: { juneAlive: true, juneTrust_gte: 1 } },
-        { speaker: "June", text: "I'll be behind you. Not close.", when: { juneAlive: true, juneTrust_lt: 1 } },
-        { speaker: "Ellis", text: "Edge looks honest. Try to be.", when: { ellisWith: true, sharpened: true } },
-        { speaker: "Ellis", text: "That edge catches. You know it. Don't saw on my account.", when: { ellisWith: true, sharpened: false } },
-        { speaker: "Cal", text: "If I fall, don't make it a sermon. Make it quick.", when: { calWith: true } },
-        { text: "Voss's rifle takes one at the knee out on the span. He does not look at you. A deal is a deal, even an ugly one.", when: { voss: "parley" } },
+        { text: "They heard the sword, or they heard the living. The span is full of them either way." },
+        { speaker: "Mia", text: "Left side. Like the first time. Don't miss.", when: { juneAlive: true, juneTrust_gte: 1 } },
+        { speaker: "Mia", text: "I'll be behind you. Not close.", when: { juneAlive: true, juneTrust_lt: 1 } },
+        { speaker: "Rico", text: "Edge looks honest. Try to be.", when: { ellisWith: true, sharpened: true } },
+        { speaker: "Rico", text: "That edge catches. Don't saw on my account.", when: { ellisWith: true, sharpened: false } },
+        { speaker: "Sam", text: "If I fall, don't make a speech. Make it quick.", when: { calWith: true } },
+        { text: "Kane's rifle drops one of them on the span. He doesn't look at you. A deal is a deal.", when: { voss: "parley" } },
+      ],
+      next: "empty_post",
+    },
+    empty_post: {
+      kind: "talk",
+      arena: "bridge",
+      log: "The army tents were empty. A loudspeaker used Mom's voice, then laughed with no air in it.",
+      lines: [
+        { text: "The army tents are up. The cots are made. Coffee is burned to the bottom of a pot. Nobody is here to drink it." },
+        { text: "A loudspeaker loops the same line. Proceed to the checkpoint. It is Mom's voice. On the third loop it says Mia's name, and then it laughs with no air in it." },
+        { speaker: "Mia", text: "That's her. That's not her. Don't make me pick.", when: { juneAlive: true } },
+        { speaker: "Sam", text: "A recording can be copied. A laugh like that isn't a recording.", when: { calWith: true } },
+        { speaker: "Rico", text: "Then we don't stand here and listen to the rest of the song.", when: { ellisWith: true } },
       ],
       next: "fight_bridge",
     },
     fight_bridge: {
       kind: "combat",
       arena: "bridge",
+      tip: "One of them is only standing. It starts moving when you get close.",
       spawn: (s) => {
         const shambler = 6 + (s.ruthAlive ? 0 : 2) + (s.stranger === "cut" ? 1 : 0);
         const runner = s.voss === "parley" ? 1 : 2;
@@ -811,6 +929,7 @@
           { type: "shambler", count: shambler },
           { type: "runner", count: runner },
           { type: "brute", count: 1 },
+          { type: "stalker", count: 1 },
         ];
       },
       next: "ending",
@@ -818,22 +937,22 @@
     ending: { kind: "ending", arena: "bridge" },
   };
 
-  const DAY_TEN = {
-    walk_school: 1, school_door: 1, fight_gym: 1, school_paper: 1, after_paper: 1,
+  const DAY_FOUR = {
+    walk_school: 1, school_door: 1, school_dark: 1, fight_gym: 1, school_paper: 1, after_paper: 1, sword_case: 1,
     walk_farm: 1, farm_gate: 1, ruth_talk: 1, sam_truth: 1, meds: 1, after_meds: 1,
-    night_talk: 1, fight_fence: 1,
+    night_talk: 1, corn_dark: 1, fight_fence: 1,
   };
-  const DAY_ELEVEN = {
-    morning: 1, after_morning: 1, walk_voss: 1, voss_talk: 1, ellis_down: 1, voss_deal: 1,
+  const DAY_FIVE = {
+    morning: 1, after_morning: 1, temper: 1, walk_voss: 1, voss_talk: 1, ellis_down: 1, voss_deal: 1,
     after_parley: 1, fight_raiders: 1, after_raiders: 1, fight_duel: 1, after_duel: 1,
     after_duel_ellis: 1, trade_june: 1, after_trade: 1, river: 1, walk_bridge: 1,
-    pre_bridge: 1, fight_bridge: 1, ending: 1,
+    pre_bridge: 1, empty_post: 1, fight_bridge: 1, ending: 1,
   };
 
   function dayOf(id) {
-    if (DAY_ELEVEN[id]) return 11;
-    if (DAY_TEN[id]) return 10;
-    return 9;
+    if (DAY_FIVE[id]) return 5;
+    if (DAY_FOUR[id]) return 4;
+    return 3;
   }
 
   function withYou(s, id) {
@@ -843,31 +962,33 @@
     return false;
   }
 
+  const WHO = { june: "Mia", ellis: "Rico", cal: "Sam" };
+
   function lineFor(s, id, why) {
     const place = s.lastFall || s.place || "the road";
     if (id === "june") {
-      if (why.down && why.fall) return "You fell at " + place + ". So did I. I can walk. I won't stand in another fight until the day turns.";
-      if (why.down) return "I went down at " + place + ". I can walk. I won't stand in another fight until the day turns.";
-      if ((s.juneTrust || 0) < 0) return "You fell at " + place + ". I saw it from back where you left me.";
-      return "You went down at " + place + ". I stayed on the left. The edge sounds different now.";
+      if (why.down && why.fall) return "You fell at " + place + ". So did I. I can walk. I won't fight again until tomorrow.";
+      if (why.down) return "I went down at " + place + ". I can walk. I won't fight again until tomorrow.";
+      if ((s.juneTrust || 0) < 0) return "You fell at " + place + ". I saw it from where you left me.";
+      return "You went down at " + place + ". I stayed on the left.";
     }
     if (id === "ellis") {
-      if (why.down && why.fall) return "You fell at " + place + ". I did too. The wrench stays down until the day turns.";
-      if (why.down) return "The wrench is done for today. I'll walk. I won't swing until the day turns.";
-      return "You hit the ground at " + place + ". I heard the edge take it.";
+      if (why.down && why.fall) return "You fell at " + place + ". I did too. The wrench stays down until tomorrow.";
+      if (why.down) return "The wrench is done for today. I'll walk. I won't swing until tomorrow.";
+      return "You hit the ground at " + place + ". I heard it.";
     }
-    if (why.down && why.fall && why.pull) return "You fell at " + place + ". I put my hands on one of them, and then I went down. I can't do either again until the day turns.";
-    if (why.down && why.fall) return "You fell at " + place + ". I went down in the same hour. I can't pull another one off you until the day turns.";
-    if (why.down && why.pull) return "I put my hands on one of them and then I went down. I can't do that again until the day turns.";
-    if (why.down) return "I can't stand in another fight until the day turns.";
-    if (why.fall && why.pull) return "You fell at " + place + ". Before that I put my hands on one of them. Neither one was a prayer.";
-    if (why.pull) return "I put my hands on one of them. Don't thank me. It wasn't a prayer.";
-    return "You fell at " + place + ". I won't bless it, and I won't pretend I didn't see.";
+    if (why.down && why.fall && why.pull) return "You fell at " + place + ". I pulled one of them off you, and then I went down. I can't do either again until tomorrow.";
+    if (why.down && why.fall) return "You fell at " + place + ". I went down in the same fight. I can't pull another one off you until tomorrow.";
+    if (why.down && why.pull) return "I pulled one of them off you and then I went down. I can't do that again until tomorrow.";
+    if (why.down) return "I can't stand in another fight until tomorrow.";
+    if (why.fall && why.pull) return "You fell at " + place + ". Before that I pulled one of them off you.";
+    if (why.pull) return "I pulled one of them off you. Don't thank me. It was the job.";
+    return "You fell at " + place + ". I saw it.";
   }
 
   function writePending(s, id) {
     if (!withYou(s, id)) return;
-    const down = (s[id + "Down"] || 0) === (s.day || 9) && s[id + "DownTold"] !== (s.day || 9);
+    const down = (s[id + "Down"] || 0) === (s.day || 3) && s[id + "DownTold"] !== (s.day || 3);
     const fall = !!s.mentionFall;
     const pull = id === "cal" && !!s.mentionPull;
     if (!down && !fall && !pull) {
@@ -876,7 +997,7 @@
     }
     if (!s.pending) s.pending = {};
     s.pending[id] = {
-      speaker: { june: "June", ellis: "Ellis", cal: "Cal" }[id],
+      speaker: WHO[id],
       text: lineFor(s, id, { down, fall, pull }),
       fall, pull, down,
     };
@@ -892,21 +1013,20 @@
       s.bladeWear = Math.min(0.62, (s.bladeWear || 0) + 0.1);
       s._wear = s.bladeWear;
       s.journal.push(s.falls > 1
-        ? "You fell again at " + place + ". You stood back up. The edge kept another nick."
-        : "You fell at " + place + ". You stood back up in the same hour. The edge kept a nick.");
+        ? "You fell again at " + place + ". You stood back up. The weapon kept another nick."
+        : "You fell at " + place + ". You stood back up. The weapon kept a nick.");
       ["june", "ellis", "cal"].forEach((id) => writePending(s, id));
       return;
     }
     if (kind === "down" && who) {
-      s[who + "Down"] = s.day || 9;
-      const name = { june: "June", ellis: "Ellis", cal: "Cal" }[who];
-      s.journal.push(name + " went down at " + (s.place || "the road") + ". No fight until the day turns.");
+      s[who + "Down"] = s.day || 3;
+      s.journal.push(WHO[who] + " went down at " + (s.place || "the road") + ". No fight until tomorrow.");
       writePending(s, who);
       return;
     }
     if (kind === "pull") {
       s.mentionPull = true;
-      s.journal.push("Cal pulled a body off you. He looked at his hands after.");
+      s.journal.push("Sam pulled a body off you.");
       writePending(s, "cal");
     }
   }
@@ -924,7 +1044,7 @@
     const pending = s.pending || {};
     const line = pending[id];
     if (!line) return;
-    if (line.down) s[id + "DownTold"] = s.day || 9;
+    if (line.down) s[id + "DownTold"] = s.day || 3;
     delete pending[id];
     if (line.fall && !Object.values(pending).some((item) => item.fall)) s.mentionFall = false;
     if (line.pull) s.mentionPull = false;
@@ -932,11 +1052,11 @@
 
   function onEnter(id, s) {
     const nextDay = dayOf(id);
-    const prev = s.day || 9;
+    const prev = s.day || 3;
     if (nextDay > prev) {
-      if (s.juneAlive && s.juneDown === prev) s.journal.push("The day turned. June can stand in a fight again.");
-      if (s.ellisWith && s.ellisAlive && s.ellisDown === prev) s.journal.push("The day turned. Ellis will swing the wrench again.");
-      if (s.calWith && s.calDown === prev) s.journal.push("The day turned. Cal can stand close in a fight again.");
+      if (s.juneAlive && s.juneDown === prev) s.journal.push("Morning. Mia can fight again.");
+      if (s.ellisWith && s.ellisAlive && s.ellisDown === prev) s.journal.push("Morning. Rico will swing the wrench again.");
+      if (s.calWith && s.calDown === prev) s.journal.push("Morning. Sam can stand in a fight again.");
     }
     s.day = nextDay;
     if (nextDay > prev) ["june", "ellis", "cal"].forEach((who) => writePending(s, who));
@@ -948,46 +1068,62 @@
     if (node && node.log) s.journal.push(fill(node.log, s));
     if (id === "farm_gate" && s.hidThomas && !s._hidPaid) {
       s._hidPaid = true;
+      s.toldThomas = true;
       s.juneTrust -= 1;
-      s.journal.push("June found the note about Thomas in your coat.");
+      s.journal.push("Mia found the note in your coat. Mom has Leo. They were going to the bridge.");
     }
     if (id === "morning" && s.ellisWith && s.ellisAlive && s.juneTrust < 1 && !s._ellisSoften) {
       s._ellisSoften = true;
       s.juneTrust += 1;
-      s.journal.push("June saw Ellis hold the line. Some of the cold left the air.");
+      s.journal.push("Mia saw Rico hold the line. She trusts the road a little more.");
     }
   }
 
   function band(n) {
-    if (n >= 2) return "close";
-    if (n >= 1) return "with you";
-    if (n >= 0) return "here, not held";
-    if (n >= -1) return "strained";
-    return "far";
+    if (n >= 2) return "with you";
+    if (n >= 1) return "trusts you";
+    if (n >= 0) return "here";
+    if (n >= -1) return "angry";
+    return "done with you";
   }
 
   function relations(s) {
-    let june = !s.juneAlive
-      ? "June is gone. The road does not give her back."
-      : "June is " + band(s.juneTrust) + ".";
-    if (s.juneAlive && s.juneDown === s.day) june += " She will not fight again until the day turns.";
-    let ellis = "Ellis Ward is not in your shadow.";
-    if (s.ellisExit === "dead") ellis = "Ellis is dead on the roadblock. The cooler isn't why, and it is.";
-    else if (s.ellisExit === "voss") ellis = "Ellis left with Voss's trucks.";
-    else if (s.ellisExit === "fled") ellis = "Ellis saw the duel and took the road alone.";
+    const goal = !s.juneAlive
+      ? "Mia is gone. The bridge is still out there."
+      : s.toldThomas
+        ? "Goal: the army bridge. Mom has Leo. Mia knows."
+        : "Goal: the army bridge. Mom has Leo. Mia is with you.";
+    let mia = !s.juneAlive
+      ? "Mia is gone."
+      : "Mia is " + band(s.juneTrust) + ".";
+    if (s.juneAlive && s.juneDown === s.day) mia += " She will not fight again until tomorrow.";
+    let rico = "Rico is not with you.";
+    if (s.ellisExit === "dead") rico = "Rico died at the roadblock.";
+    else if (s.ellisExit === "voss") rico = "Rico left with Kane's trucks.";
+    else if (s.ellisExit === "fled") rico = "Rico saw the duel and left.";
     else if (s.ellisWith && s.ellisAlive) {
-      ellis = "Ellis is " + band(s.ellisTrust) + ".";
-      if (s.ellisDown === s.day) ellis += " The wrench is down until the day turns.";
+      rico = "Rico is " + band(s.ellisTrust) + ".";
+      if (s.ellisDown === s.day) rico += " The wrench is down until tomorrow.";
     }
-    else if (s.robbed) ellis = "You took his food. He remembers the weight.";
-    let cal = !s.calWith ? "Cal is on some other road." : "Cal is " + band(s.calTrust) + ".";
-    if (s.calWith && s.calDown === s.day) cal += " He will not stand in another fight until the day turns.";
-    const edge = s.sharpened || (s.bladeWear || 0) < 0.08
-      ? "The edge is honest."
-      : (s.bladeWear || 0) < 0.3
-        ? "The blade still bites clean, mostly."
-        : "The edge catches. You have to mean it twice.";
-    return [june, ellis, cal, edge];
+    else if (s.robbed) rico = "You took his food. He remembers.";
+    let sam = !s.calWith ? "Sam is on some other road." : "Sam is " + band(s.calTrust) + ".";
+    if (s.calWith && s.calDown === s.day) sam += " He will not fight again until tomorrow.";
+    const wear = s.bladeWear || 0;
+    const honest = s.sharpened || wear < 0.08
+      ? "The edge is clean."
+      : wear < 0.3
+        ? "The blade still cuts, mostly."
+        : "The edge catches. You have to swing twice.";
+    let edge = "You have a pipe and a short knife. The school sword is still at the school.";
+    if ((s.swordRank || 0) >= 3) edge = "You sharpened the sword and warmed the spine. " + honest;
+    else if ((s.swordRank || 0) >= 2) edge = "You sharpened the sword. " + honest;
+    else if ((s.swordRank || 0) >= 1) edge = "You have the school sword. It still needs a stone. " + honest;
+    if ((s.swordRank || 0) > 0 && s.weapon && s.weapon !== "sword") {
+      edge += s.weapon === "knife"
+        ? " The knife is in your hand."
+        : " The pipe is in your hand.";
+    }
+    return [goal, mia, rico, sam, edge];
   }
 
   function endingOf(s) {
@@ -1002,34 +1138,37 @@
 
   function memories(s) {
     const bits = [];
-    if (s.harris === "quiet") bits.push("June still counts under her breath when a door sticks. She got to eighty-seven once. She has not told you what number she is on now.");
-    else if (s.harris === "told") bits.push("Harris looked at June because you made him. She kept the picture. You said you would carry it" + (s.carriedPaid ? ", and for one hour, you did." : ". Some hours you didn't."));
-    else if (s.harris === "turned") bits.push("Harris turned in the back seat after you bought miles with a towel. June was in the front. She had already told you.");
-    if (s.hidThomas) bits.push("Thomas Pell's name rode in your coat until June took it back. Brier Street did not get any closer for the hiding.");
-    else if (s.asked) bits.push("You let June say Thomas's name before the paper did. Eleven years old. One shoe on, even in sleep. Brier Street.");
-    else if (s.toldThomas) bits.push("You put the pickup list in her hand without a speech. She filled the silence herself.");
-    if (s.meds === "ruth") bits.push("Ruth Miller saw the morning. Sam Ibarra didn't. The bottle was honest about only having one name in it.");
-    else if (s.meds === "sam") bits.push("Sam ate. Ruth didn't. Owen runs the names now, and he does not make them prettier.");
-    else if (s.meds === "kept") bits.push("The bottle stayed in your coat. The porch learned the sound of it. Two people didn't see morning.");
-    if (s.ellisExit === "dead") bits.push("Ellis Ward stopped on the asphalt between a truck and a wrench. The peaches were the start of that sentence, not the end.");
-    else if (s.ellisExit === "voss") bits.push("Ellis went with the trucks. He nodded once, like a debt he didn't intend to pay in front of you.");
-    else if (s.ellisWith) bits.push("Ellis walks where the work is. He still calls the katana a long way to bring a kitchen knife, and then he stands on the loud side.");
-    else if (s.robbed) bits.push("Somewhere a mechanic is still angry about peaches. You know the weight of the can.");
-    if (s.stranger === "cut") bits.push("A woman in a shouldered car does not have a name in your mouth. Cal walked that road and called the work a blessing with dirt on it.");
-    else if (s.stranger === "left") bits.push("You left a woman tapping on the glass. The tapping outlasted the overpass.");
-    if (s.voss === "parley") bits.push("Half the seed corn bought a gate. Voss kept his word the way a knife keeps an edge: useful, not warm.");
-    else if (s.vossDead) bits.push("Voss is a body with a whole name and no softer one. The corn stayed. So did the shape of the fight.");
-    else if (s.voss === "trade") bits.push("The table was yours. Voss only took what you set on it.");
-    if (s.hour === "sharpen") bits.push("You spent the quiet hour on the edge. It shows. So does everything you didn't say.");
-    else if (s.swordDown) bits.push("You put the sword in the dirt and the dirt did not keep it. You picked it up when the trucks came.");
-    else if (s.hour === "food") bits.push("June said the peaches tasted like a door shut soft. You didn't ask her to thank you.");
-    if (s.gaveCar) bits.push("Nedra has the car. You learned the length of a mile with your feet.");
+    if (s.harris === "quiet") bits.push("You killed Dean out of Mia's sight. She heard it anyway.");
+    else if (s.harris === "told") bits.push("Dean told Mia he was bitten, because you made him. Then you ended it." + (s.carriedPaid ? " You sat with her afterward, like you said you would." : ""));
+    else if (s.harris === "turned") bits.push("You kept driving with Dean's bite. He turned in the back seat. Mia was in the front. She had already told you.");
+    if (s.hidThomas) bits.push("You hid the school note. Mia found it. Mom has Leo. They were going to the bridge.");
+    else if (s.asked) bits.push("You let Mia say Leo's name before the note did. He's eight. He sleeps with one shoe on. Mom has him.");
+    else if (s.toldThomas) bits.push("You put the note in her hand. Mom has Leo. Army bridge. They did not leave her.");
+    if (s.meds === "ruth") bits.push("Helen saw the morning. Jonah didn't. The bite showed itself at dawn. There was only one bottle.");
+    else if (s.meds === "sam") bits.push("Jonah ate. Helen didn't. Dale runs the farm now, and he says it plain.");
+    else if (s.meds === "kept") bits.push("You kept the medicine. Helen and Jonah both missed the morning.");
+    if (s.ellisExit === "dead") bits.push("Rico died at the roadblock. It started when you took the cooler.");
+    else if (s.ellisExit === "voss") bits.push("Rico went with Kane's trucks. He nodded once and didn't look back.");
+    else if (s.ellisWith) bits.push("Rico walks where the work is. He still takes the loud side.");
+    else if (s.robbed) bits.push("Somewhere a mechanic is still angry about a cooler of peaches. You know the weight of the can.");
+    if (s.stranger === "cut") bits.push("You killed a woman in a crashed car before she finished turning. It was loud. It was quicker than leaving her.");
+    else if (s.stranger === "left") bits.push("You left a woman beating on the glass of her car. She was already turning.");
+    if (s.voss === "parley") bits.push("Half the food bought an open road. Kane kept his word.");
+    else if (s.vossDead) bits.push("Kane is dead. The food stayed. The road to the bridge opened because of a fight.");
+    else if (s.voss === "trade") bits.push("You put Mia on the table. Kane took her. The farm is still standing.");
+    if (s.hour === "sharpen") bits.push("You spent the quiet hour on the sword. The edge shows it.");
+    else if (s.swordDown) bits.push("You put the sword in the dirt and walked the fence with Mia. You picked it up when the trucks came.");
+    else if (s.hour === "food") bits.push("Mia said the peaches tasted like a normal morning. You didn't ask her to thank you.");
+    if (s.gaveCar) bits.push("Nora has the car. You walked.");
+    if ((s.swordRank || 0) >= 3) bits.unshift("The school sword is sharpened, and you warmed the spine so it won't crack.");
+    else if (s.swordTold) bits.unshift("You told Mia the sword was at school for Saturday class. Then you took it back.");
+    else if ((s.swordRank || 0) > 0) bits.unshift("You took the school sword and saved the explanation for later.");
     if ((s.falls || 0) > 0) {
       const dull = !s.sharpened && (s.bladeWear || 0) >= 0.08;
       const once = s.falls === 1;
       bits.unshift(once
-        ? "You fell once and stood up in the same hour. " + (dull ? "The edge kept the nick." : "The stone took the nick back.") + " The roads did not move for it."
-        : "You fell more than once and stood up in the same hour. " + (dull ? "The edge kept every nick." : "The stone took the nicks back.") + " The roads did not move for it.");
+        ? "You fell once and stood back up. " + (dull ? "The edge kept the nick." : "The stone took the nick off.")
+        : "You fell more than once and stood back up. " + (dull ? "The edge kept every nick." : "The stone took the nicks off."));
     }
     return bits.slice(0, (s.falls || 0) > 0 ? 6 : 5);
   }
@@ -1039,48 +1178,48 @@
     const mem = memories(s);
     const closings = {
       door: [
-        "In the morning the sword is by the door, where boots can see it. June steps over it without counting. Someone on the fence calls your name like it is a job.",
-        "You answer. That is the whole mercy available on this farm, and you take it with dirty hands.",
+        "In the morning the sword is by the door, where people can see it. Mia steps over it. Someone on the fence calls your name like it is a job.",
+        "You answer. At night the corn still tries your name, and Mom's, perfect as dinner. You don't answer that one. The bridge is still out there. Today the farm is still a farm.",
       ],
       thin: [
-        "You stay. The farm is a handful of people who flinch when the sword passes a doorway. Owen counts cans and does not count on you for stories.",
-        "The gate holds. Holding is not the same as healing. You take the watch anyway, because leaving would ask for a witness you no longer deserve.",
+        "You stay. People flinch when the sword passes a doorway. Dale counts cans and does not ask you for stories.",
+        "The gate holds. At night something past it practices the way you say hello. You take the watch anyway, and you do not say hello back.",
       ],
       june: [
-        "You do not promise her that Thomas is alive. She does not ask you to. The farm gets small behind you. She walks on your left.",
-        "Brier Street is a direction, not a pardon. The sword is heavy in the ordinary way. For now, that is enough road.",
+        "You do not promise Mia that Leo is alive. She does not ask you to. The farm gets small behind you. She walks on your left.",
+        "The loudspeaker is still going when you reach the tents. It knows how you say her name. If Mom is here, you will see her. If she isn't, the voice will keep her anyway.",
       ],
       signal: [
-        "Cal holds the radio like a bowl. A voice says a street you know. You tell him the truth of that street, or you don't, and he nods as if a fact can be sat with.",
-        "The water takes the county road back. You keep walking toward a voice because a voice is a kind of person until it isn't.",
+        "Sam holds the radio like it might break. A voice says a street you know. Under it, very quiet, is a laugh with no air in it.",
+        "You keep walking. A voice is a person until it starts wearing someone you love. The bridge is still the way through.",
       ],
       ash: [
-        "No one is behind you. You check anyway. The blade is bright at the work and useless at talking.",
-        "Harrow Creek closes like a mouth. You keep walking because stopping would require a witness.",
+        "No one is behind you. You check anyway. Something back there says your name in a voice you trust.",
+        "You don't turn around. Millford closes like a mouth that has learned how you sound.",
       ],
       trade: [
-        "The corn stays. The watch changes. Nobody stands on your left. Owen will not say her name, and you will not make him.",
-        "At night the gate holds. You are the thing it cost.",
+        "The food stays. The watch changes. Nobody stands on your left. Dale will not say her name, and you will not make him.",
+        "At night the loudspeaker says Mia's name once, perfectly. You are the one who put her where it could learn her.",
       ],
     };
     const titles = {
-      door: "The Door",
-      thin: "The Thin Gate",
-      june: "June's Road",
-      signal: "The Signal",
-      ash: "Ash",
-      trade: "What You Traded",
+      door: "You Stay",
+      thin: "A Thin Gate",
+      june: "The Bridge",
+      signal: "The Radio",
+      ash: "Alone",
+      trade: "The Trade",
     };
     return {
       type,
       title: titles[type],
-      kicker: "Day 11  —  " + (s.name || "Mara"),
+      kicker: "Day 5  —  " + (s.name || "Alex"),
       paragraphs: mem.concat(closings[type]),
     };
   }
 
   function createState(name) {
-    const clean = String(name || "Mara").replace(/[<>]/g, "").trim().slice(0, 18) || "Mara";
+    const clean = String(name || "Alex").replace(/[<>]/g, "").trim().slice(0, 18) || "Alex";
     return {
       name: clean,
       juneTrust: 0,
@@ -1102,6 +1241,9 @@
       livingKilled: 0,
       bladeWear: 0,
       sharpened: false,
+      weapon: "pipe",
+      swordRank: 0,
+      swordTold: false,
       voss: "",
       sparedVoss: false,
       vossDead: false,
@@ -1120,7 +1262,7 @@
       toldThomas: false,
       hidThomas: false,
       asked: false,
-      day: 9,
+      day: 3,
       falls: 0,
       lastFall: "",
       mentionFall: false,
@@ -1132,14 +1274,42 @@
       juneDownTold: 0,
       ellisDownTold: 0,
       calDownTold: 0,
-      journal: ["Day 9. The dojo still smells like floor wax and the dead."],
+      journal: ["Day 3. Mom has Leo. They are going to the army bridge. Mia found you at the community center. You have a pipe and a short knife. The school sword is still at the school."],
       hp: 100,
-      place: "Harrow Creek",
+      place: "Millford",
       node: "",
       _did: {},
       _wear: 0,
     };
   }
 
-  root.Story = { NODES, match, apply, fill, resolve, onEnter, relations, ending, createState, dayOf, remember, readyLines, hear };
+  const BEFORE_SWORD = {
+    opening: 1, courtyard_reply: 1, voices_lot: 1, fight_glass: 1, shoe: 1, confront: 1,
+    black_quiet: 1, black_told: 1, after_quiet: 1, after_told: 1,
+    delay_leave: 1, secret_leave: 1, car_dark: 1, walk_gas: 1, ellis_meet: 1,
+    fight_pump: 1, after_join: 1, after_leave: 1, fight_lot: 1, after_lot: 1,
+    harris_check: 1, black_late_quiet: 1, black_late_told: 1, late_after: 1, late_keep: 1,
+    bus_dark: 1, overpass_calm: 1, black_stranger: 1, fight_noise: 1, left_stranger: 1,
+    overpass_turn: 1, fight_turn: 1, after_turn: 1, truck: 1, black_brother: 1,
+    after_brother: 1, wait_brother: 1, fight_trees: 1, after_trees: 1,
+    give_car: 1, cal_join: 1, fight_road: 1, walk_school: 1, school_door: 1, school_dark: 1,
+    fight_gym: 1, school_paper: 1, after_paper: 1, sword_case: 1,
+  };
+
+  function migrate(s, node) {
+    if (s.swordRank == null) s.swordRank = 0;
+    if (s.swordTold == null) s.swordTold = false;
+    if (!s.weapon) s.weapon = s.swordRank > 0 ? "sword" : "pipe";
+    if (s.swordRank < 1 && node && !BEFORE_SWORD[node]) {
+      s.swordRank = s.sharpened ? 2 : 1;
+      s.weapon = "sword";
+      if (!s._swordMigrated) {
+        s._swordMigrated = true;
+        if (!s.journal) s.journal = [];
+        s.journal.push("The school sword was already in your hand. The care card said: sharpen the edge, warm the spine, don't grind the groove.");
+      }
+    }
+  }
+
+  root.Story = { NODES, match, apply, fill, resolve, onEnter, relations, ending, createState, dayOf, remember, readyLines, hear, migrate };
 })(window);

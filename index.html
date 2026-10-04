@@ -12,27 +12,38 @@
     <div id="grain"></div>
     <div id="vignette"></div>
     <div id="bleed"></div>
+    <div id="blood-rim"></div>
+    <div id="lowlife" aria-hidden="true">
+      <span class="edge"></span>
+      <i class="drop d1"></i>
+      <i class="drop d2"></i>
+      <i class="drop d3"></i>
+      <i class="drop d4"></i>
+      <i class="drop d5"></i>
+      <span class="beat"></span>
+    </div>
+    <canvas id="splats"></canvas>
 
     <section id="title">
-      <p class="eyebrow">Harrow Creek</p>
+      <p class="eyebrow">Millford</p>
       <h1>Zombie<br />Slayer</h1>
-      <p class="lede">The fog does not lift. What the katana cuts down is still out there, closer than the moonlight, listening for a step.</p>
-      <p class="fine">Death and infection are part of the road. Mercy is a black screen, not a show. The dead are a pressure. The living are the choices.</p>
+      <p class="lede">Day 3. Your mom has Leo and is heading for the army bridge. Your sister Mia found you. The dead are already learning your voices.</p>
+      <p class="fine">A bite does not get better. Between the fights, the dark talks back. The sword from Saturday class is still at the school.</p>
       <label class="name-field">
         <span>What do they call you</span>
-        <input id="name" maxlength="18" value="Mara" autocomplete="off" />
+        <input id="name" maxlength="18" value="Alex" autocomplete="off" />
       </label>
       <div class="row">
         <button class="btn" id="btn-new" type="button">Begin</button>
         <button class="btn hidden" id="btn-continue" type="button">Continue</button>
         <button class="btn ghost" id="btn-sound" type="button">Sound on</button>
       </div>
-      <p class="fine" style="margin-top:22px">WASD move · arrows or mouse turn · click cuts · right mouse blocks · space dodges · E approaches · J journal · Esc pauses · dialogue is spoken</p>
+      <p class="fine" style="margin-top:22px">WASD move · arrows or mouse turn · 1 pipe · 2 knife · 3 sword, once you find it · click cuts · right mouse blocks · space dodges · E approaches · J journal · Esc pauses</p>
     </section>
 
     <div id="confirm" class="hidden">
       <h2>Erase all progress?</h2>
-      <p class="lede">The saved road is deleted. The next story starts on day 9, at the glass.</p>
+      <p class="lede">The saved road is deleted. The next story starts on day 3, at the community center.</p>
       <div class="row">
         <button class="btn" id="btn-yes" type="button">Start from the beginning</button>
         <button class="btn ghost" id="btn-no" type="button">Go back</button>
@@ -42,11 +53,12 @@
     <div id="hud" class="hidden">
       <div>
         <div id="place"></div>
+        <div id="weapon"></div>
       </div>
       <div class="bars">
         <div class="bar hp" id="bar-hp"><span>BODY</span><i><span id="fill-hp"></span></i></div>
         <div class="bar" id="bar-st"><span>ARM</span><i><span id="fill-st"></span></i></div>
-        <div class="bar" id="bar-edge"><span>EDGE</span><i><span id="fill-edge"></span></i></div>
+        <div class="bar" id="bar-edge"><span id="edge-label">PIPE</span><i><span id="fill-edge"></span></i></div>
       </div>
     </div>
     <div id="hint"></div>
@@ -83,7 +95,7 @@
     <div id="dead" class="hidden">
       <p class="eyebrow">Down</p>
       <h2>Something is still chewing</h2>
-      <p class="lede">The sword stays where it fell. You can stand back up in the same hour. The nick in the edge stays too, and so does whatever heard you drop.</p>
+      <p class="lede">What you were holding stays where it fell. You can stand back up in the same hour. The nick in the edge stays too, and so does whatever heard you drop.</p>
       <div class="row">
         <button class="btn" id="btn-retry" type="button">Stand up</button>
         <button class="btn ghost" id="btn-dead-title" type="button">Title</button>
@@ -99,7 +111,7 @@
     </div>
 
     <div id="end" class="hidden">
-      <p class="eyebrow" id="end-kicker">Harrow Creek</p>
+      <p class="eyebrow" id="end-kicker">Millford</p>
       <h1 id="end-title"></h1>
       <div id="endps"></div>
       <button class="btn" id="btn-end" type="button">Back to the dark</button>
